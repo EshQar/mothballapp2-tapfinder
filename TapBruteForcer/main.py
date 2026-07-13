@@ -102,7 +102,6 @@ def find_tap_strats(params):
         return "No strats found!"
 
     def printer(tap_strat):
-        nonlocal params
         def to_addable_string(potential_string):
             if potential_string == None:
                 return ""

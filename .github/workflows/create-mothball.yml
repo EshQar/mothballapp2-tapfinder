@@ -48,14 +48,31 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       shell: bash
 
+    - name: Install Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+
+    - name: Install maturin
+      run: |
+        pip install maturin
+
+    - name: Build brute_forcer PyO3 module
+      run: |
+        cd brute_forcer
+        maturin develop --release
+      shell: bash
+
     - name: Build app with PyInstaller
       run: |
         pip install pyinstaller
-        pyinstaller --onefile ${{ matrix.add_data }} --i "${{ matrix.icon }}" Mothball.py
-      shell: bash
+        pyinstaller --onefile \
+        ${{ matrix.add_data }} \
+        --collect-all brute_forcer \
+        --i "${{ matrix.icon }}" \
+        Mothball.py
+              shell: bash
 
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
+            - name: Upload executable
+              uses: actions/upload-artifact@v4
+              with:
         name: ${{ matrix.artifact_name }}
         path: ${{ matrix.output }}

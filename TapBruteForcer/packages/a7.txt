@@ -1,0 +1,12 @@
+key:wasd
+notation:(count != 1 or not xair|[count])(count != 1 and xair|×)(xair|-<11-{xair}>t)(not xair|[prefix])(xair|a)[name][key]
+prefix:a7
+args:xair=0
+conditions:rejectn
+
+r
+sa.key[modifiers] sta({xair})
+_
+wa.key[modifiers] sta({xair})
+s
+sna.key[bl, modifiers] sta({xair})

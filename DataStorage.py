@@ -9,6 +9,7 @@ class CodeCell:
     exec_time: str | None
     has_changed: bool
     raw_output: list[list]
+    tap_params: dict[str, bool | float | str]
 
 @dataclass
 class TextCell:

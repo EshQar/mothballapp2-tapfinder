@@ -13,6 +13,7 @@ def _tokenize(expression):
         ('RPAREN', r'\)'),            # Right Parenthesis
         ('ID', r'[A-Za-z_][A-Za-z_0-9]*'),  # Variable name (w/ underscores) (for substitutions)
         ('WHITESPACE', r'\s+'),             # Whitespace
+        ('COMMA', r','),              # Chatgippity told me to do this to add functions (in this spot as well)
         ('MISMATCH', r'.'),           # Anything else (will raise an error)
     ]
 
@@ -91,14 +92,24 @@ def _evaluate(tokens, variables):
     operators = []
     prevkind = None
     prevvalue = None
+    argument_counts = []
+    FUNCTIONS = {
+    "abs": abs,
+    "max": max,
+    "min": min,
+    }
+
     for kind, value in tokens:
         if kind == 'NUMBER':
             operands.append(value)
-        elif kind == 'ID':
-            if value in variables:
+        elif kind == "ID":
+            if value in FUNCTIONS:
+                argument_counts.append(1)
+                operators.append(("FUNC", value))
+            elif value in variables:
                 operands.append(variables[value])
             else:
-                raise ValueError(f"Unknown variable: {value}")
+                raise ValueError(f"Unknown variable or function: {value}")
             
         elif kind == 'MINUS':
             if (prevkind is None) or (prevkind in ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'POW', 'LPAREN']):
@@ -123,6 +134,21 @@ def _evaluate(tokens, variables):
             # print(operands)
             # print(operators)
             operators.pop()
+            if operators and operators[-1][0] == "FUNC":
+                _, name = operators.pop()
+                nargs = argument_counts.pop()
+
+                args = operands[-nargs:]
+                del operands[-nargs:]
+                operands.append(FUNCTIONS[name](*args))
+        elif kind == 'COMMA':
+            argument_counts[-1] += 1
+            while operators and operators[-1] != '(':
+                operands = _apply_operator(operands, operators.pop())
+
+            if not operators:
+                raise SyntaxError("Unexpected ','")
+            
         prevkind = kind
         prevvalue = value
 
@@ -146,6 +172,8 @@ def evaluate(expression, variables: dict=None):
 
     # print(expression)
     tokens = _tokenize(expression)
+    result=  _evaluate(tokens, variables)
+
     try:
         result=  _evaluate(tokens, variables)
         if isinstance(result, float) and result.is_integer():
@@ -155,6 +183,8 @@ def evaluate(expression, variables: dict=None):
         raise SyntaxError(f"{e} in expression '{expression}'")
 
 # if __name__ == "__main__":
+    # print(evaluate("abs(-1)+2**(-max(1,4-8*p4x))", {'p4x':1/2}))
+
     # print(evaluate("0.1+0.2", {"p":3}))
 
     # print(evaluate("2**(3-1)/(2+6)") == 0.5)

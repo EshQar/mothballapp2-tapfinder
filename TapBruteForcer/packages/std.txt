@@ -1,0 +1,11 @@
+key:wasd
+notation:[count](_n|×{_n}t)[prefix][name][key]
+prefix:
+args:
+
+r
+s.key({_n})
+u
+w.key({_n})
+s
+sn.key({_n})

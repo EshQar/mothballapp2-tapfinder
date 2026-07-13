@@ -187,7 +187,9 @@ class MainWindow(QMainWindow):
         self.empty_add_widget.hide()
         QApplication.processEvents()
 
-        if cellType == CellType.XZ or cellType == CellType.Y:
+        if cellType == CellType.XZ:
+            section = CodeCell.SimulationSection(self, self.settings, self.codecell_colors, self.textcell_colors, self.removeCell, self.addCell, self.moveCell, self.onChangeDetected, self.copyCell, tap_cell=True, mode=cellType)
+        elif cellType == CellType.Y:
             section = CodeCell.SimulationSection(self, self.settings, self.codecell_colors, self.textcell_colors, self.removeCell, self.addCell, self.moveCell, self.onChangeDetected, self.copyCell, mode=cellType)
         elif cellType == CellType.TEXT:
             section = TextCell.TextSection(self, self.settings, self.codecell_colors, self.textcell_colors, self.removeCell, self.addCell, self.moveCell, self.onChangeDetected, self.copyCell, initialMode=initialMode)

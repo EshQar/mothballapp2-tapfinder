@@ -797,6 +797,10 @@ class BasePlayer:
     
     def simulate(self, sequence: str, return_defaults = True, locals: dict = None, suppress_exception: bool = True):
         "Execute Mothball Code. If no output was made and `return_defaults == True`, return the default output (see `show_default_output()`). `locals` is a dict of values for variables."
+
+        sequence = sequence.replace(" || ", " | vx(0) vz(0) ")
+        # Silly implementation of double pipe ^_^
+
         try:
             parsed_tokens = self.parse(sequence)
 
@@ -839,3 +843,115 @@ if __name__ == "__main__":
     # n = time.perf_counter()
     # print(n-m)
     b=a.show_output()
+
+# Below you will find copies of the methods from the class above in order to serparate them from the class
+
+def remove_comments_and_check_strings(string: str):
+    "Removes comments delimited by `#`"
+    result = []
+    in_comment = False
+    follows_slash = False
+    in_string = False
+
+    for char in string:
+        if char == '"' and not follows_slash:
+            in_string = not in_string
+
+        if char == "#" and not follows_slash and not in_string:
+            in_comment = not in_comment
+            continue
+
+        if not in_comment:
+            result.append(char)
+
+        if char == "\\" and not follows_slash:
+            follows_slash = True
+        
+        else:
+            follows_slash = False
+    
+    if in_string:
+        raise SyntaxError('Unmatched quotes (")')
+
+    return "".join(result)
+
+def parse(string: str, splitters: tuple = ("\n", " ", "\r", "\t"), strict_whitespace: bool = True) -> list: 
+    """
+    Splits the string at any of the splitters that are outside of parenthesis.
+    Returns the first layer list of strings (or tokens), raises `SyntaxError` if there are missing spaces, or parenthesis are unmatched.
+
+    Comments are delimited by the `#` symbol. Anything between comments will be ignored.
+
+    `repeat(sprintjump(12), 3) sprint(2) outz(16)` parses into `[repeat(sprintjump(12), 3), sprint(2), outz(16)]`
+    """
+
+    result = []
+    token = ""
+    stack = [] # parenthesis
+    current = 0
+    high = len(string)
+    expecting_whitespace = False
+    
+    matches_next_element = lambda e: ((e == ")" and stack[-1] == "(") or (e == "]" and stack[-1] == "["))
+
+    follows_slash = False
+    in_string = False
+
+    string = remove_comments_and_check_strings(string)
+
+    # Regex to change '|' into 'x(0) z(0)'
+    replace_bar_regex = r"(\|)"
+    string = re.sub(replace_bar_regex, " x(0) z(0) ", string)
+    
+    for char in string + splitters[0]:
+        if strict_whitespace:
+            if expecting_whitespace and not char.isspace():
+                if char in ")]":
+                    raise SyntaxError(f"Unmatched brackets at character {current}: {string[max(0, current-5):min(high, current + 5)]}")
+                else:
+                    msg = f"Space needed at character {current}"
+                    msg += f": {string[max(0, current-7):min(high, current + 7)]}"
+                    raise SyntaxError(msg)
+            else:
+                expecting_whitespace = False
+
+        if char == "\\":
+            follows_slash = True
+            token += char
+            continue
+            
+        elif char == '"' and not follows_slash:
+            in_string = not in_string
+
+        elif (char == "(" or char == "[") and not follows_slash and not in_string:
+            stack.append(char)
+        elif (char == ")" or char == "]") and not follows_slash and not in_string:
+            if not stack:
+                raise SyntaxError(f"Unmatched brackets at character {current}: {string[max(0, current-5):min(high, current + 5)]}")
+            if not matches_next_element(char):
+                raise SyntaxError(f"Unmatched brackets at character {current}: {string[max(0, current-5):min(high, current + 5)]}")
+            stack.pop()
+            if not stack:
+                token += char
+                follows_slash = False
+                if char == ")":
+                    expecting_whitespace = True
+                current += 1
+                continue
+
+        if char in splitters and not stack and not follows_slash and not in_string:
+            token = token.strip()
+            result.append(token) if token else None
+            token = ""
+
+        else:
+            token += char
+            current += 1
+
+        follows_slash = False
+        expecting_whitespace = False
+    
+    if stack:
+        raise SyntaxError("Unmatched open parethesis")
+
+    return result

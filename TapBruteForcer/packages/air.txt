@@ -1,0 +1,12 @@
+key:wasd
+notation:[count][prefix][name][key]
+prefix:a
+args:airtime=12, leniency=2
+conditions:ground rejectn
+
+s
+sna.key sta(max({airtime} - 1 - {leniency}, 0))
+_
+wa.key sta(max({airtime} - 1 - {leniency}, 0))
+r
+sa.key sta(max({airtime} - 1 - {leniency}, 0))

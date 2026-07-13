@@ -17,20 +17,33 @@ from Enums import *
 from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget, QComboBox, QShortcut, QLineEdit
 import os, json
 
+from TapBruteForcer.main import find_tap_strats
+from TapBruteForcer.parser import update_params, get_bf_text
+import TapBruteForcer.helper as helper
+
 class Worker(QObject):
     finished = pyqtSignal(list, dict, int)
 
-    def __init__(self, input_str, simulation_type):
+    def __init__(self, input_str, simulation_type, tap_params={"active" : False}):
         super().__init__()
         self.input_str = input_str
         self.simulation_type = simulation_type
         self.p = None
         self.isrunning = False
+        self.tap_params = tap_params
 
     def run(self):
         self.isrunning = True
         try:
-            if self.simulation_type == CellType.XZ:
+            if self.tap_params["active"]:
+                tap_output = find_tap_strats(self.tap_params)
+                normal_input_str = helper.sanitize_mothball_cmd(self.tap_params["mothball"])
+
+                self.p = mxz.PlayerSimulationXZ()
+                self.p.simulate(normal_input_str, suppress_exception=True)
+                output = self.p.output + [(8, ("",)), (4, ("---------- Tap Strats Below ----------",)), (8, ("",))] + tap_output
+                self.finished.emit(output, self.p.macros, 1)
+            elif self.simulation_type == CellType.XZ:
                 self.p = mxz.PlayerSimulationXZ()
                 self.p.simulate(self.input_str, suppress_exception=False)
                 self.finished.emit(self.p.output, self.p.macros, 1)
@@ -48,7 +61,7 @@ class Worker(QObject):
 
 class SimulationSection(Cell):
     "Mothball Code Cell, `CodeEdit` as the input field, `RenderViewer` as the output viewer. The actual highlighting is done here, and the highlighting logic is computed in its linter `self.linter`."
-    def __init__(self, parent, generalOptions: dict, colorOptions: dict, textOptions: dict, remove_callback, add_callback, move_callback, change_callback, copy_callback, mode: CellType):
+    def __init__(self, parent, generalOptions: dict, colorOptions: dict, textOptions: dict, remove_callback, add_callback, move_callback, change_callback, copy_callback, mode: CellType, tap_cell=False):
         super().__init__(parent, generalOptions, colorOptions, textOptions, remove_callback, add_callback, move_callback, change_callback, copy_callback, mode)
         self.mode = mode
         self.words = []
@@ -73,6 +86,56 @@ class SimulationSection(Cell):
             self.input_label = QLabel("Input (Y):")
         self.input_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         tophlayout.addWidget(self.input_label)
+
+        if tap_cell:
+            self.goal_type_button = QPushButton("Goal Type: Min and max")
+            self.goal_type_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            self.goal_type_button.setFixedWidth(150)
+            self.goal_type_button.clicked.connect(self.switch_goal_type)
+            tophlayout.addWidget(self.goal_type_button)
+
+            self.axis_button = QPushButton("Axis: XZ")
+            self.axis_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            self.axis_button.setFixedWidth(80)
+            self.axis_button.clicked.connect(self.switch_axis)
+            tophlayout.addWidget(self.axis_button)
+
+            self.init_taps_button = QPushButton("Taps")
+            self.init_taps_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            self.init_taps_button.setFixedWidth(80)
+            self.init_taps_button.clicked.connect(self.init_taps)
+            tophlayout.addWidget(self.init_taps_button)
+
+            self.tap_params = {
+                "active" : False,
+
+                "goal_type" : "minmax",
+                "axis" : "XZ",
+                "mothball" : "",
+
+                "n" : 0,
+                "f" : "0",
+                "do_frange" : False,
+                "fstart" : 0,
+                "fend" : 0,
+                "fstep" : 0.05,
+                "xmin" : float("-inf"),
+                "xmax" : float("inf"),
+                "zmin" : float("-inf"),
+                "zmax" : float("inf"),
+                "xtarget" : 0,
+                "xerror" : float("inf"),
+                "ztarget" : 0,
+                "zerror" : float("inf"),
+                "packages" : "",
+                "corners" : "",
+                "sortby" : "",
+                "version" : "1.8",
+                "dp" : 6,
+                "slip" : "Not implemented",
+            }
+        else:
+            self.tap_params = {"active" : False}
 
         self.edit_or_save_name_button = QPushButton("🖉")
         self.edit_or_save_name_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -167,6 +230,61 @@ class SimulationSection(Cell):
         self.run_shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.run_shortcut.activated.connect(self.run_simulation)
 
+    def load_tap_bf_params(self):
+        display_text = {
+        "minmax" : "Min and max" ,
+        "target" : "Target and error",
+        "mothball" : "Mothball",
+        }
+
+        goal_type = self.tap_params["goal_type"]
+        axis = self.tap_params["axis"]
+        self.goal_type_button.setText(f"Goal Type: {display_text[goal_type]}")
+        self.axis_button.setText(f"Axis: {axis}")
+
+    def switch_goal_type(self):
+        goal_types = {"minmax" : "target", "target" : "mothball", "mothball" : "minmax"}
+        self.tap_params["goal_type"] = goal_types[self.tap_params["goal_type"]]
+        display_text = {
+        "minmax" : "Min and max" ,
+        "target" : "Target and error",
+        "mothball" : "Mothball",
+        }
+
+        goal_type = self.tap_params["goal_type"]
+        self.goal_type_button.setText(f"Goal Type: {display_text[goal_type]}")
+
+        curr_text = self.input_field.text()
+        update_params(self, strict=False)
+        self.input_field.setText(get_bf_text(curr_text, self.tap_params))
+
+    def switch_axis(self):
+        axes = {"XZ" : "X", "X" : "Z", "Z" : "XZ"}
+        self.tap_params["axis"] = axes[self.tap_params["axis"]]
+        axis = self.tap_params["axis"]
+        self.axis_button.setText(f"Axis: {axis}")
+
+        curr_text = self.input_field.text()
+        update_params(self, strict=False)
+        self.input_field.setText(get_bf_text(curr_text, self.tap_params))
+
+    def init_taps(self):
+        curr_text = self.input_field.text()
+
+        if self.tap_params["active"]:
+            try:
+                update_params(self)
+                self.input_field.setText(curr_text.partition("-----")[0].rstrip("\n"))
+            except Exception as e:
+                self.output_field.renderTextfromOutput(self.linter, [(ExpressionType.GENERAL_LABEL, (f"Error occurred: {str(e)}",))])
+                return
+
+            self.tap_params["active"] = False
+            return
+        else:
+            self.input_field.setText(get_bf_text(curr_text, self.tap_params))
+            self.tap_params["active"] = True
+
     def editCellName(self):
         self.cell_name.hide()
         self.edit_name_field.show()
@@ -232,9 +350,11 @@ class SimulationSection(Cell):
     def run_simulation(self):
         "Execute the Mothball code and show its output."
         text = self.input_field.text()
+        if self.tap_params["active"]:
+            update_params(self)
 
         self.t = QThread()
-        self.worker = Worker(text, self.mode)
+        self.worker = Worker(text, self.mode, tap_params=self.tap_params)
         self.worker.moveToThread(self.t)
 
         self.t.started.connect(self.worker.run)
@@ -290,17 +410,21 @@ class SimulationSection(Cell):
             "code": self.input_field.text(),
             "exec_time": "None",
             "has_changed": False,
-            "raw_output": self.raw_output
+            "raw_output": self.raw_output,
+            "tap_params" : self.tap_params
         }
         return data
     
     def setupCell(self, data):
-        if not all([x in ("cell_type", "name","code","exec_time","has_changed","raw_output") for x in data]):
+        if not all([x in ("cell_type", "name","code","exec_time","has_changed","raw_output","tap_params") for x in data]):
             return
         self.input_field.setText(data['code'].rstrip())
         self.cell_name.setText(data['name'])
         self.output_field.renderTextfromOutput(self.linter, data['raw_output'])
         self.raw_output = data['raw_output']
+        self.tap_params = data['tap_params']
+
+        self.load_tap_bf_params()
     
     def resizeEvent(self, event):
         self.adjust_output_height()

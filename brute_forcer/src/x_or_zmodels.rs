@@ -1,6 +1,5 @@
-
-
 use crate::iterators::{WeakCompositions, SignedCompositions};
+use crate::models::{Conglomerate, Goal};
 
 trait SingleAxisPoolIterator {
     fn advance(&mut self) -> bool;
@@ -145,8 +144,12 @@ impl<'a> SingleAxisPoolIteratorConglomerate<'a> {
             pos: init_pos,
         }
     }
+}
 
-    pub fn advance(&mut self) -> bool {
+impl<'a> Conglomerate for SingleAxisPoolIteratorConglomerate<'a> {
+    type Pos = f32;
+
+    fn advance(&mut self) -> bool {
         if self.iterators[self.pivot].advance() {
 
             self.iterators[self.pivot].reset();
@@ -165,7 +168,11 @@ impl<'a> SingleAxisPoolIteratorConglomerate<'a> {
         }
     }
 
-    pub fn weight_state(&self) -> Vec<&[isize]> {
+    fn pos(&self) -> Self::Pos {
+        return self.pos;
+    }
+
+    fn weight_state(&self) -> Vec<&[isize]> {
         return self.iterators.iter().map(|i| i.weight_state()).collect()
     }
 }
@@ -192,17 +199,46 @@ impl SingleAxisGoal {
 
         Self { start, end, span, center }
     }
+}
 
-    pub fn is_satisfied(&self, point: f32) -> bool {
+impl Goal<f32> for SingleAxisGoal {
+    type Dist = (f32, f32);
+
+    fn is_satisfied(&self, point: f32) -> bool {
         return self.start < point && point < self.end
-
     }
 
-    pub fn get_quality(&self, point: f32) -> f32 {
+    fn get_quality(&self, point: f32) -> f32 {
         return ((point - self.center)/self.span).abs()
     }
 
-    pub fn get_dists(&self, point: f32) -> (f32, f32) {
+    fn get_dists(&self, point: f32) -> (f32, f32) {
         return ((point - self.start).abs(), (point - self.end).abs())
+    }
+}
+
+pub struct AxisProjectedGoal { inner: SingleAxisGoal, axis: usize }
+
+impl AxisProjectedGoal {
+    pub fn new(start: f32, end: f32, axis: usize) -> Self {
+        Self { 
+            inner: SingleAxisGoal::new(start, end),
+            axis,
+        }
+    }
+}
+
+impl Goal<(f32, f32)> for AxisProjectedGoal {
+    type Dist = (f32, f32);
+    fn is_satisfied(&self, pos: (f32, f32)) -> bool {
+        self.inner.is_satisfied(if self.axis == 0 { pos.0 } else { pos.1 })
+    }
+
+    fn get_quality(&self, pos: (f32, f32)) -> f32 {
+        self.inner.get_quality(if self.axis == 0 { pos.0 } else { pos.1 })
+    }
+
+    fn get_dists(&self, pos: (f32, f32)) -> (f32, f32) {
+        self.inner.get_dists(if self.axis == 0 { pos.0 } else { pos.1 })
     }
 }

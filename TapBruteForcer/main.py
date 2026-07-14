@@ -3,6 +3,7 @@ from brute_forcer import brute_force
 from TapBruteForcer.tap import TapStrat
 from TapBruteForcer.parser import xz_get_goals, single_axis_get_goals
 import TapBruteForcer.helper as helper
+import math
 
 def find_tap_strats(params):
     for key in params.keys():
@@ -37,6 +38,8 @@ def find_tap_strats(params):
 
 
     fstart, fend, fstep = float(params["fstart"]), float(params["fend"]), float(params["fstep"])
+    assert fstart < fend
+    fsteps = math.ceil((fend - fstart)/fstep)
 
 
     max_counts, pools, is_reversible = packer(packing_cmd, params)
@@ -93,8 +96,10 @@ def find_tap_strats(params):
 
     #----------------------------------------------------------------------------------------------------#
 
-
-    strats = brute_force(n, max_counts, pools_offset, is_reversible, goals, axis, fstart, fstep, fend)
+    try:
+        strats = brute_force(n, max_counts, pools_offset, is_reversible, goals, axis, fstart, fstep, fsteps)
+    except BaseException as e:
+        raise RuntimeError(f"The brute-forcer encountered an error: {e}")
     tap_strats = [TapStrat(*strat, params) for strat in strats]
     TapStrat.pools = pools
 

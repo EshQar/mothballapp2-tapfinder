@@ -21,6 +21,8 @@ from TapBruteForcer.main import find_tap_strats
 from TapBruteForcer.parser import update_params, get_bf_text
 import TapBruteForcer.helper as helper
 
+import traceback
+
 class Worker(QObject):
     finished = pyqtSignal(list, dict, int)
 
@@ -52,6 +54,8 @@ class Worker(QObject):
                 a = self.p.simulate(self.input_str, suppress_exception= False)
                 self.finished.emit(self.p.output, {}, 1)
         except Exception as e:
+            error_string = traceback.format_exc()
+            print(error_string)
             self.finished.emit([(ExpressionType.GENERAL_LABEL, (f"Error occurred: {str(e)}",))], {}, 0)
         self.isrunning = False
 

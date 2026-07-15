@@ -4,6 +4,8 @@ This is a tap brute-forcer integrated into the mothball app by anonnoob. It also
 >**Known Limitations and issues**\
 >Currently there is no handling of walls or edges. All taps in any tap strat must be assumed to be ordered in such a way that they never hit a wall or an edge if it is possible. If it is not possible the strat should be disregarded.
 >
+>Do not crank the max taps up especially if you have a lot of taps, it can very quickly become too much and there's no abort button as of yet so your stuff first or smth.
+>
 >Loading files that were made with earlier versions can be made impossible by some updates
 >
 >Probably something else so if you suspect you got a bogus output of some kind do notify me! @EshQar on discord

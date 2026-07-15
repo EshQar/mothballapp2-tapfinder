@@ -1,12 +1,12 @@
 key:wasd
-notation:(count != 1 or not xair|[count])(count != 1 and xair|×)(xair|-<11-{xair}>t)(not xair|[prefix])(xair|a)[name][key]
+notation:(count != 1 or not xair|[count])(_n and count != 1|×{_n}t)(count != 1 and xair and not _n|×)(xair|-<11-{xair}>t)(not xair|[prefix])(xair|a)[name][key]
 prefix:a7
 args:xair=0
-conditions:rejectn
+conditions:
 
 r
-sa.key[modifiers] sta({xair})
-_
-wa.key[modifiers] sta({xair})
+sa.key[modifiers]({_n}) sta({xair})
+u
+wa.key[modifiers]({_n}) sta({xair})
 s
-sna.key[bl, modifiers] sta({xair})
+sna.key[modifiers]({_n}) sta({xair})

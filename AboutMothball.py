@@ -60,6 +60,7 @@ Lastly, if you haven't already, download MPK/CYV to enhance your in game parkour
 # Credits
 To CyrenArkade for the original Mothball concept in the form of a discord bot
 To anonnoob (myself) for updating Mothball and creating the GUI version
+To EshQar for the tap brute-forcer in this fork of the original Mothball app
 To hammsamichz for helping with mothball help pages
 To Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube.com/@3rasmian)) for helping us notify Mojang to retain good movement mechanics. 
 To everyone else who has contributed to Mothball, whether it be through code, suggestions, or bug reports

@@ -1,12 +1,12 @@
 key:wasd
-notation:[count][prefix][name][key]
+notation:[count](_n|×{_n}t)[prefix][name][key]
 prefix:a
 args:airtime=12, leniency=2
-conditions:ground rejectn
+conditions:ground
 
 s
-sna.key sta(max({airtime} - 1 - {leniency}, 0))
+sna.key[modifiers]({_n}) sta(max({airtime} - {leniency} - {_n}, 0))
 _
-wa.key sta(max({airtime} - 1 - {leniency}, 0))
+wa.key[modifiers]({_n}) sta(max({airtime} - {leniency} - {_n}, 0))
 r
-sa.key sta(max({airtime} - 1 - {leniency}, 0))
+sa.key[modifiers]({_n}) sta(max({airtime} - {leniency} - {_n}, 0))

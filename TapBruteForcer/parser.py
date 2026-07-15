@@ -4,7 +4,7 @@ import TapBruteForcer.helper as helper
 import numpy as np
 import math
 
-def update_params(section, strict=True):
+def get_new_params(curr_params, curr_text, strict=True):
     param_names = {
         "Max taps" : "n",
         "Facing" : "f",
@@ -24,17 +24,14 @@ def update_params(section, strict=True):
         "Slip" : "slip",
     }
 
-    params = section.tap_params
+    params = curr_params
 
-    curr_text = section.input_field.text()
     mothball_cmd, _, args = curr_text.partition("-----")
     params["mothball"] = mothball_cmd
 
     if args == "":
-        if strict:
-            raise SyntaxError("Either partition, \"-----\", between mothball and \'Brute force\' was not found or args were completely empty!")
-        else:
-            return
+        raise SyntaxError("Either partition, \"-----\", between mothball and \'Brute force\' was not found or args were completely empty!")
+
 
     expected_params = {
         "n",
@@ -112,7 +109,7 @@ def update_params(section, strict=True):
             element = next(iter(found_params - expected_params))
             raise SyntaxError(f"Did not expect parameter {element} but it was found!")
 
-    section.params = params
+    return params
 
 def get_bf_text(current_text, params):
     if params["active"]:
@@ -149,7 +146,8 @@ def get_bf_text(current_text, params):
 
     return current_text.rstrip("\n") + "\n\n\n" + command + "\n" + args1 + "\n" + args2 + args3 + "\n" + args4 + "\n" + args5 + "\n}"
 
-def mothball_to_goal(mothball_cmd, axis="xz"):
+def mothball_to_goal(mothball_cmd, axis="XZ"):
+    assert axis == axis.upper()
     xpos_output_cmds = {"outx", "xmm", "xb"}
     zpos_output_cmds = {"outz", "zmm", "zb"}
     constraints = []
@@ -157,7 +155,7 @@ def mothball_to_goal(mothball_cmd, axis="xz"):
 
     mothball_cmd = helper.remove_spaces_inside_brackets_and_strip_and_lower(mothball_cmd, include_chevrons=False)
     mothball_cmd = helper.remove_superfluous_output_commands(mothball_cmd)
-    helper.check_mothball_cmd_for_ref_compatibility(mothball_cmd)
+    helper.check_mothball_cmd_for_ref_compatibility(mothball_cmd, axis)
 
     captured, sanitized_mothball_cmd = helper.capture_critical_commands(mothball_cmd)
     output = mothball(sanitized_mothball_cmd)
@@ -172,13 +170,13 @@ def mothball_to_goal(mothball_cmd, axis="xz"):
 
     def constrain(axis, ineq, x):
         nonlocal xmin, zmin, xmax, zmax
-        if axis == "x" and ineq == ">":
+        if axis == "X" and ineq == ">":
             xmin = max(xmin, x)
-        elif axis == "z" and ineq == ">":
+        elif axis == "Z" and ineq == ">":
             zmin = max(zmin, x)
-        elif axis == "x" and ineq == "<":
+        elif axis == "X" and ineq == "<":
             xmax = min(xmax, x)
-        elif axis == "z" and ineq == "<":
+        elif axis == "Z" and ineq == "<":
             zmax = min(zmax, x)
 
     def init_constraints(constraints, outs):
@@ -196,19 +194,27 @@ def mothball_to_goal(mothball_cmd, axis="xz"):
 
 
     if xmin == float("-inf") and xmax == float("inf"):
-        if axis == "z":
+        if axis == "Z":
             goal = (zmin, zmax)
         else:
             raise SyntaxError("Expected X or XZ goal but got no X constraints!")
     elif zmin == float("-inf") and zmax == float("inf"):
-        if axis == "x":
+        if axis == "X":
             goal = (xmin, xmax)
         else:
             raise SyntaxError("Expected Z or XZ goal but got no Z constraints!")
-    elif axis == "xz":
+    elif axis == "XZ":
         goal = ((xmin, zmin), (xmax, zmax))
 
-
+    if axis == "X":
+        goal = (xmin, xmax)
+    elif axis == "Z":
+        goal = (zmin, zmax)
+    elif axis == "XZ":
+        goal = ((xmin, zmin), (xmax, zmax))
+    else:
+        raise ValueError("axis wasn't recognized!")
+    
     return goal
 
 def xz_get_goals(params):
@@ -258,18 +264,18 @@ def single_axis_get_goals(params):
     goal_type = params["goal_type"]
     do_frange = params["do_frange"]
     mothball_cmd = params["mothball"]
-    axis = params["axis"].lower()
+    axis = params["axis"]
 
     goals = []
     if goal_type == "minmax":
-        min, max = float(params[f"{axis}min"]), float(params[f"{axis}max"])
+        min, max = float(params[f"{axis.lower()}min"]), float(params[f"{axis.lower()}max"])
         goal = (min, max)
 
 
         goals.append(goal)
 
     elif goal_type == "target":
-        t, e = float(params[f"{axis}target"]), float(params[f"{axis}error"])
+        t, e = float(params[f"{axis.lower()}target"]), float(params[f"{axis.lower()}error"])
         goal = (t - e, t + e)
 
         goals.append(goal)
@@ -326,11 +332,12 @@ def packing_parser(cmd):
             case ".":
                 direction = segment
             case "\\":
-                exclusions = segment.split(",")
+                if segment == "u":
+                    exclusions.append("_")
+                exclusions.append(segment)
             case "[":
                 if char != "]":
                     raise SyntaxError("Expected closing bracket but the next critical character did not match!")
-                
                 modifiers = segment.strip("[")
             case "(":
                 if char != ")":

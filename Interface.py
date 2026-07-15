@@ -56,7 +56,7 @@ def mothball_fetch_XZ_as_tap(base_input_str, air, sim_params, ground):
         
             offset.append((x0, z0))
     else:
-        input_str = f"version(\"{version}\") sndel(false) f({facing}) " + input_str + " outx outz outvx outvz"
+        input_str = f"version(\"{version}\") sndel(false) f({facing}) " + base_input_str + " outx outz outvx outvz"
         p = PlayerSimulationXZ()
         p.simulate(input_str, suppress_exception=False)
         

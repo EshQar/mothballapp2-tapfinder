@@ -45,7 +45,7 @@ class Tap():
                 statement = self.args[arg_name][0] == "custom"
                 bool_expr = bool_expr.replace(f"{arg_name.strip()}", f"{statement}")
 
-            bool_expr = bool_expr.replace("count", str(count)).replace("key", str(key)).replace("name", str(self.name)).replace("prefix", str(self.prefix))
+            bool_expr = bool_expr.replace("count", str(count)).replace("key", f"\"{str(key)}\"").replace("name", f"\"{str(self.name)}\"").replace("prefix", f"\"{str(self.prefix)}\"")
 
             bool_expr = helper.replace_between(bool_expr, 0, "<", ">", potentially_evaluate)
 

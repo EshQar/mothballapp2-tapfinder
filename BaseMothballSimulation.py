@@ -486,6 +486,10 @@ class BasePlayer:
 
         string = self.remove_comments_and_check_strings(string)
 
+        # Regex to change '||' into 'x(0) z(0) vx(0) vz(0)'
+        replace_double_bar_regex = r"(\|\|)"
+        string = re.sub(replace_double_bar_regex, " x(0) z(0) vx(0) vz(0) ", string)
+
         # Regex to change '|' into 'x(0) z(0)'
         replace_bar_regex = r"(\|)"
         string = re.sub(replace_bar_regex, " x(0) z(0) ", string)
@@ -798,9 +802,6 @@ class BasePlayer:
     def simulate(self, sequence: str, return_defaults = True, locals: dict = None, suppress_exception: bool = True):
         "Execute Mothball Code. If no output was made and `return_defaults == True`, return the default output (see `show_default_output()`). `locals` is a dict of values for variables."
 
-        sequence = sequence.replace(" || ", " | vx(0) vz(0) ")
-        # Silly implementation of double pipe ^_^
-
         try:
             parsed_tokens = self.parse(sequence)
 
@@ -900,6 +901,9 @@ def parse(string: str, splitters: tuple = ("\n", " ", "\r", "\t"), strict_whites
     string = remove_comments_and_check_strings(string)
 
     # Regex to change '|' into 'x(0) z(0)'
+    replace_double_bar_regex = r"(\|\|)"
+    string = re.sub(replace_double_bar_regex, " x(0) z(0) vx(0) vz(0) ", string)
+
     replace_bar_regex = r"(\|)"
     string = re.sub(replace_bar_regex, " x(0) z(0) ", string)
     

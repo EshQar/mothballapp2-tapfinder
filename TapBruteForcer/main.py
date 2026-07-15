@@ -12,8 +12,9 @@ def find_tap_strats(params):
         elif params[key] == "" or params[key] is None:
             raise RuntimeError("Found empty param, but it was not specified as empty by using '...'!")
 
-    assert 0 <= int(params["n"])
-    assert 0 <= int(params["dp"])
+    assert not params["n"] is None and 0 < int(params["n"]), "Max taps must be a nonzero positive integer!"
+    assert 0 < int(params["dp"]), "dp must be a nonzero positive integer!"
+    assert not params["packages"] is None , "Packages cannot be empty!"
 
     n = int(params["n"])
     dp = int(params["dp"])
@@ -23,27 +24,12 @@ def find_tap_strats(params):
 
     do_frange = params["do_frange"]
 
-    sort_key = lambda x: None
-    match params["sortby"]:
-        case None:
-            sort_key = lambda strat: strat.dists["xmin"]
-        case "xmin":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
-        case "zmin":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
-        case "xmax":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
-        case "zmax":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
-
-
     fstart, fend, fstep = float(params["fstart"]), float(params["fend"]), float(params["fstep"])
-    assert fstart < fend
+    if do_frange:
+        assert fstart < fend
     fsteps = math.ceil((fend - fstart)/fstep)
 
-
-    max_counts, pools, is_reversible = packer(packing_cmd, params)
-    pools_offset = [[tap.offset for tap in pool] for pool in pools]
+    max_counts, pools, pools_offset, is_reversible = packer(packing_cmd, params)
 
     corners = None
     match params["axis"]:
@@ -56,7 +42,6 @@ def find_tap_strats(params):
             corners_cmd = params["corners"]
             if corners_cmd != "" and not corners_cmd is None:
                 corners = helper.corner_parser(corners_cmd)
-
         case "X":
             axis = 0
             goals = single_axis_get_goals(params)
@@ -82,7 +67,6 @@ def find_tap_strats(params):
             if corners_cmd != "" and not corners_cmd is None:
                 corners = helper.single_axis_corner_parser(corners_cmd)
 
-
     if corners != None:
         if do_frange:
             assert len(goals) == 1, "Something went wrong, annoy esh"
@@ -91,11 +75,30 @@ def find_tap_strats(params):
             assert len(goals) == 1, "Something went wrong, annoy esh"
             goals = [helper.shift_goal_by_point(corner, goals[0]) for corner in corners]
 
-    pools, pools_offset = helper.cleanse_repeat_taps(pools, pools_offset)
+    sort_key = lambda x: None
+    match params["sortby"]:
+        case None:
+            if axis != 1:
+                sort_key = lambda strat: strat.dists["xmin"]
+            else:
+                sort_key = lambda strat: strat.dists["zmin"]
+        case "xmin":
+            sort_key = lambda strat: strat.dists[params["sortby"]]
+        case "zmin":
+            sort_key = lambda strat: strat.dists[params["sortby"]]
+        case "xmax":
+            sort_key = lambda strat: strat.dists[params["sortby"]]
+        case "zmax":
+            sort_key = lambda strat: strat.dists[params["sortby"]]
 
 
     #----------------------------------------------------------------------------------------------------#
 
+
+    assert 0 < n, "Required: Max taps > 0"
+    assert isinstance(n, int)
+    assert all((count >= 0) for count in max_counts), "Invalid max_counts or is_reversible"
+    assert sum(max_counts) >= n, "The sum of max counts cannot be less than n"
     try:
         strats = brute_force(n, max_counts, pools_offset, is_reversible, goals, axis, fstart, fstep, fsteps)
     except BaseException as e:
@@ -104,7 +107,7 @@ def find_tap_strats(params):
     TapStrat.pools = pools
 
     if tap_strats == []:
-        return "No strats found!"
+        return [(8, ("No strats found!",))]
 
     def printer(tap_strat):
         def to_addable_string(potential_string):

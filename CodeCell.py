@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget, QComboBox, QShort
 import os, json
 
 from TapBruteForcer.main import find_tap_strats
-from TapBruteForcer.parser import update_params, get_bf_text
+from TapBruteForcer.parser import get_new_params, get_bf_text
 import TapBruteForcer.helper as helper
 
 import traceback
@@ -38,9 +38,9 @@ class Worker(QObject):
         self.isrunning = True
         try:
             if self.tap_params["active"]:
-                tap_output = find_tap_strats(self.tap_params)
+                tap_params = get_new_params(self.tap_params, self.input_str)
+                tap_output = find_tap_strats(tap_params)
                 normal_input_str = helper.sanitize_mothball_cmd(self.tap_params["mothball"])
-
                 self.p = mxz.PlayerSimulationXZ()
                 self.p.simulate(normal_input_str, suppress_exception=True)
                 output = self.p.output + [(8, ("",)), (4, ("---------- Tap Strats Below ----------",)), (8, ("",))] + tap_output
@@ -92,7 +92,7 @@ class SimulationSection(Cell):
         tophlayout.addWidget(self.input_label)
 
         if tap_cell:
-            self.goal_type_button = QPushButton("Goal Type: Min and max")
+            self.goal_type_button = QPushButton("Goal Type: Mothball")
             self.goal_type_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
             self.goal_type_button.setFixedWidth(150)
             self.goal_type_button.clicked.connect(self.switch_goal_type)
@@ -112,12 +112,13 @@ class SimulationSection(Cell):
 
             self.tap_params = {
                 "active" : False,
+                "current_partition_line" : 3,
 
-                "goal_type" : "minmax",
+                "goal_type" : "mothball",
                 "axis" : "XZ",
                 "mothball" : "",
 
-                "n" : 0,
+                "n" : 5,
                 "f" : "0",
                 "do_frange" : False,
                 "fstart" : 0,
@@ -133,7 +134,7 @@ class SimulationSection(Cell):
                 "zerror" : float("inf"),
                 "packages" : "",
                 "corners" : "",
-                "sortby" : "",
+                "sortby" : "zmin",
                 "version" : "1.8",
                 "dp" : 6,
                 "slip" : "Not implemented",
@@ -246,6 +247,18 @@ class SimulationSection(Cell):
         self.goal_type_button.setText(f"Goal Type: {display_text[goal_type]}")
         self.axis_button.setText(f"Axis: {axis}")
 
+    def update_brute_force_text(self):
+        curr_text = self.input_field.text()
+
+        try:
+            self.tap_params = get_new_params(self.tap_params, self.input_field.text(), strict=False)
+            self.input_field.setText(get_bf_text(curr_text, self.tap_params))
+        except Exception:
+            if curr_text.partition("-----")[2].rstrip("\n") == "":
+                self.output_field.renderTextfromOutput(self.linter, [(ExpressionType.GENERAL_LABEL, ("Couldn't update params because they were not enabled/found.",))])
+            else:
+                self.output_field.renderTextfromOutput(self.linter, [(ExpressionType.GENERAL_LABEL, ("Couldn't update params for unknown reason.",))])
+
     def switch_goal_type(self):
         goal_types = {"minmax" : "target", "target" : "mothball", "mothball" : "minmax"}
         self.tap_params["goal_type"] = goal_types[self.tap_params["goal_type"]]
@@ -258,9 +271,7 @@ class SimulationSection(Cell):
         goal_type = self.tap_params["goal_type"]
         self.goal_type_button.setText(f"Goal Type: {display_text[goal_type]}")
 
-        curr_text = self.input_field.text()
-        update_params(self, strict=False)
-        self.input_field.setText(get_bf_text(curr_text, self.tap_params))
+        self.update_brute_force_text()
 
     def switch_axis(self):
         axes = {"XZ" : "X", "X" : "Z", "Z" : "XZ"}
@@ -268,23 +279,29 @@ class SimulationSection(Cell):
         axis = self.tap_params["axis"]
         self.axis_button.setText(f"Axis: {axis}")
 
-        curr_text = self.input_field.text()
-        update_params(self, strict=False)
-        self.input_field.setText(get_bf_text(curr_text, self.tap_params))
+        self.update_brute_force_text()
 
     def init_taps(self):
         curr_text = self.input_field.text()
 
         if self.tap_params["active"]:
             try:
-                update_params(self)
+                self.tap_params = get_new_params(self.tap_params, self.input_field.text(), strict=False)
                 self.input_field.setText(curr_text.partition("-----")[0].rstrip("\n"))
             except Exception as e:
-                self.output_field.renderTextfromOutput(self.linter, [(ExpressionType.GENERAL_LABEL, (f"Error occurred: {str(e)}",))])
+                e1 = f"Error encountered while fetching params, something might not have been saved: {str(e)} "
+                e2 = ""
+                if curr_text.partition("-----")[2].rstrip("\n") == "":
+                    e2 = "Partition \"-----\" not being found has resulted in an attempted reinsertion. Press 'Taps' again if you wish to try disabling tap brute-forcing. Anything that cannot be parsed will be lost!"
+                    i = helper.find_nth(curr_text, "\n", self.tap_params["current_partition_line"])
+                    self.input_field.setText(curr_text[:i] + "----------" + curr_text[i:])
+                    self.output_field.renderTextfromOutput(self.linter, [(ExpressionType.GENERAL_LABEL, (e1 + e2,))])
+                    return
+
+                self.output_field.renderTextfromOutput(self.linter, [(ExpressionType.GENERAL_LABEL, (f"Unknown error encountered: {e}"))])
                 return
 
             self.tap_params["active"] = False
-            return
         else:
             self.input_field.setText(get_bf_text(curr_text, self.tap_params))
             self.tap_params["active"] = True
@@ -354,8 +371,6 @@ class SimulationSection(Cell):
     def run_simulation(self):
         "Execute the Mothball code and show its output."
         text = self.input_field.text()
-        if self.tap_params["active"]:
-            update_params(self)
 
         self.t = QThread()
         self.worker = Worker(text, self.mode, tap_params=self.tap_params)
@@ -431,6 +446,13 @@ class SimulationSection(Cell):
         self.load_tap_bf_params()
     
     def resizeEvent(self, event):
+        if self.tap_params["active"]:
+            lines = self.input_field.text().split("\n")
+            if not "-----" in lines[self.tap_params["current_partition_line"]]:
+                for i, line in enumerate(lines):
+                    if "-----" in line:
+                        self.tap_params["current_partition_line"] = i
+
         self.adjust_output_height()
         super().resizeEvent(event)
     

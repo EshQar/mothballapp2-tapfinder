@@ -1,0 +1,10 @@
+key:wasd
+notation:[count](_n|×{_n}t)[prefix][name][key]
+prefix:ab
+args:airtime=12, leniency=2
+conditions:ground
+
+s
+sna.key[bl, modifiers]({_n}) sta(max({airtime} - {leniency} - {_n}, 0))
+_
+wa.key[bl, modifiers]({_n}) sta(max({airtime} - {leniency} - {_n}, 0))

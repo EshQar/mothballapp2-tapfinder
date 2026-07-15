@@ -1,0 +1,10 @@
+key:wasd
+notation:[count](_n|×{_n}t)(timing and not _n|×)(timing|-{timing}t)[prefix][name][key]
+prefix:pb
+args:timing=1, airtime=12
+conditions:
+
+s
+sna.key[bl, modifiers]({_n}) sta(max({airtime} - {timing} - {_n}, 0))
+u
+wa.key[bl, modifiers]({_n}) sta(max({airtime} - {timing} - {_n}, 0))

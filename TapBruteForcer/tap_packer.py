@@ -6,6 +6,7 @@ import TapBruteForcer.helper as helper
 from ExprEval import evaluate
 import os
 import sys
+from collections import defaultdict
 
 def package_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
@@ -21,14 +22,21 @@ directional_suffixes = {
     "w" : ("w",), 
     "s" : ("s",), 
     "a" : ("a",), 
-    "d" : ("d",)
+    "d" : ("d",),
+    "wdwa" : ("wd", "wa", "sa", "sd"),
 }
 
 reversible_directional_suffixes = {
     "wasd" :  ("w", "d"), 
     "wasd+" : ("w", "d", "wa", "wd"), 
     "ws" : ("w",), 
-    "ad" : ("d",)
+    "ad" : ("d",),
+    "wad" : (), 
+    "w" : (), 
+    "s" : (), 
+    "a" : (), 
+    "d" : (),
+    "wdwa" : ("wd", "wa"),
 }
 
 def validate_command(cmd):
@@ -64,7 +72,6 @@ def validate_command(cmd):
 
     for func in funcs:
         excluded_funcs = {"st", "sta"}
-
         _, index = helper.find_next_critical_char(func, 0, {"(", ".", "[", " "})
         func_name = func[:index]
         if func_name in excluded_funcs:
@@ -95,16 +102,19 @@ def package_to_taps(package_name, directions, modifiers, exclude, sim_params, _n
         keys = None
         if reversible:
             keys = reversible_directional_suffixes[directions]
+            if keys == ():
+                keys = directional_suffixes[directions]
+                reversible = False
         else:
             keys = directional_suffixes[directions]
 
 
         for key in keys:
             if key in valid_directions:
-                if not modifiers is None:
+                if not modifiers == "":
                     command = cmd.replace("key", key).replace("modifiers", modifiers)
                 else:
-                    command = cmd.replace("key", key)
+                    command = cmd.replace("key", key).replace(",modifiers", "").replace("modifiers", "")
                 offset, is_satisified = mothball_tap(command, air, sim_params, ground)
                 if is_satisified:
                     tap = Tap(tap_name, prefix, notation, key, offset, arg_dict)
@@ -207,6 +217,7 @@ def packer(cmd, sim_params):
     r_unrestricted_pool = []
     i_unrestricted_pool = []
     max_counts = []
+    package_sizes = []
 
     iterator = iter(range(len(cmds)))
     for i in iterator:
@@ -217,6 +228,9 @@ def packer(cmd, sim_params):
             temp_rtaps, temp_itaps = package_to_taps(package, direction, modifiers, exclusions, sim_params, _n, args)
             rtaps.extend(temp_rtaps)
             itaps.extend(temp_itaps)
+        rtaps, itaps = list((len(package_sizes), tap) for tap in rtaps), list((len(package_sizes), tap) for tap in itaps)
+        package_sizes.append(len(rtaps) + len(itaps))
+
 
         try:
             max_count = int(cmds[i+1])
@@ -248,8 +262,67 @@ def packer(cmd, sim_params):
         pools.append(i_unrestricted_pool)
         is_reversible.append(False)
 
+    pools, pools_offset, deleted_pools = cleanse_repeat_taps(pools, package_sizes, sim_params["do_frange"], sim_params["axis"], helper.get_zero_offset(sim_params))
+    for index in reversed(deleted_pools):
+        del max_counts[index]
+        del is_reversible[index]
+
     max_counts[:] = [int(sim_params["n"]) if count == "u" else count for count in max_counts]
-    return max_counts, pools, is_reversible
+    return max_counts, pools, pools_offset, is_reversible
+
+def cleanse_repeat_taps(pools, sizes, do_frange, axis, zero_offset):
+    to_delete = set()
+    pools_offset = None
+    if do_frange or axis == "XZ":
+        pools_offset = list(list(tap[1].offset for tap in pool) for pool in pools)
+    elif axis == "X":
+        pools_offset = list(list(tap[1].offset[0] for tap in pool) for pool in pools)
+    elif axis == "Z":
+        pools_offset = list(list(tap[1].offset[1] for tap in pool) for pool in pools)
+    pools_package_index = list(list(tap[0] for tap in pool) for pool in pools)
+    pools = list(list(tap[1] for tap in pool) for pool in pools)
+
+    for i in range(len(pools)):
+        for j in range(len(pools[i])):
+            if pools_offset[i][j] == zero_offset:
+                to_delete.add((i,j))
+
+    for i1 in range(len(pools)):
+        for j1 in range(len(pools[i1])):
+            for j2 in range(j1 + 1, len(pools[i1])): # i2 == i1
+                if pools_offset[i1][j1] == pools_offset[i1][j2]:
+                    if sizes[pools_package_index[i1][j1]] <= sizes[pools_package_index[i1][j2]]:
+                        to_delete.add((i1, j2))
+                    else:
+                        to_delete.add((i1, j1))
+
+
+            for i2 in range(i1 + 1, len(pools)):
+                for j2 in range(len(pools[i2])):
+                    if pools_offset[i1][j1] == pools_offset[i2][j2]:
+                        if sizes[pools_package_index[i1][j1]] <= sizes[pools_package_index[i2][j2]]:
+                            to_delete.add((i2, j2))
+                        else:
+                            to_delete.add((i1, j1))
+
+    rows = defaultdict(list)
+    for i, j in to_delete:
+        rows[i].append(j)
+
+    for i, js in rows.items():
+        for j in sorted(js, reverse=True):
+            del pools[i][j]
+            del pools_offset[i][j]
+
+    deleted_pools = []
+    for i in reversed(range(len(pools))):
+        if pools[i] == []:
+            deleted_pools.append(i)
+            del pools[i]
+            del pools_offset[i]
+
+
+    return pools, pools_offset, deleted_pools
 
 if __name__ == "__main__":
     params = {

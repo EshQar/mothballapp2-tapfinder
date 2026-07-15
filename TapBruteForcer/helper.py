@@ -1,7 +1,6 @@
 import math
 import re
-from collections import defaultdict
-from BaseMothballSimulation import parse as split_mothball_cmd
+from BaseMothballSimulation import parse as get_split_mothball_cmd
 
 def sign(x):
     if x > 0:
@@ -77,6 +76,11 @@ def remove_spaces_inside_brackets_and_strip_and_lower(s, include_chevrons=True):
 
     return "".join(result)
 
+def replace_tap_mothball_commands(mothball_cmd):
+    for custom_command, normal_command in {(" ! ", " | "), (" !! ", " || "), (" x!(", " x("), (" z!(", " z(")}:
+        mothball_cmd = mothball_cmd.replace(custom_command, normal_command)
+    return mothball_cmd
+
 def capture_critical_commands(mothball_cmd):
     def sanitize_args(args):
         args = tuple(map(lambda x: x.strip(), args.split(",")))
@@ -111,38 +115,40 @@ def capture_critical_commands(mothball_cmd):
         re.DOTALL,
     )
 
-    sanitized_mothball_cmd = pattern.sub(repl, mothball_cmd).replace(" !| ", " | ")
-
+    sanitized_mothball_cmd = replace_tap_mothball_commands(pattern.sub(repl, mothball_cmd))
     return captured, sanitized_mothball_cmd
 
-def check_mothball_cmd_for_ref_compatibility(mothball_cmd):
-    split_mothball_cmd = mothball_cmd.split()
+def check_mothball_cmd_for_ref_compatibility(mothball_cmd, axis):
+    split_mothball_cmd = get_split_mothball_cmd(mothball_cmd)
     xpos_output_cmds = {"outx", "xmm", "xb"}
     zpos_output_cmds = {"outz", "zmm", "zb"}
+    ignorable_cmds = {"print", "outvz", "outvx", "vec"}
 
-    e1 = SyntaxError("Incorrect syntax: have you made sure | or z() or x() is preceded by corresponding output commands with reference points?")
+    e1 = SyntaxError("Incorrect syntax: have you made sure all | or z() or x() are preceded by corresponding output commands with reference points?")
     e2 = SyntaxError("Error while processing constraints: have you made sure | or z() or x() is preceded by corresponding output commands with reference points?")
     try:
-        for i, cmd in enumerate(split_mothball_cmd):
-            if cmd == "|":
-                prev_1, prev_2 = split_mothball_cmd[i - 1].split("("), split_mothball_cmd[i - 2].split("(")
-                cmd_prev_1, cmd_prev_2 = prev_1[0], prev_2[0]
-                args_prev_1, args_prev_2 = prev_1[1].split(","), prev_2[1].split(",")
+        wants_xref, wants_zref = False, False
+        while split_mothball_cmd != []:
+            cmd = split_mothball_cmd[-1]
+            del split_mothball_cmd[-1]
+            _, i = find_next_critical_char(cmd, 0, {".", "(", "["})
+            cmd = cmd[:i]
 
-                if not (cmd_prev_1 in xpos_output_cmds or cmd_prev_2 in xpos_output_cmds):
-                    raise e1
-                elif not (cmd_prev_1 in zpos_output_cmds or cmd_prev_2 in zpos_output_cmds):
-                    raise e1
-                
-#                if all(map(lambda x: not ("<" in x or ">" in x), args_prev_1)):
-#                    raise e1
-#                elif all(map(lambda x: not ("<" in x or ">" in x), args_prev_2)):
-#                    raise e1
+            if cmd == "x":
+                wants_xref = True if not axis == "Z" else False
+            elif cmd == "z":
+                wants_zref = True if not axis == "X" else False
+            elif cmd in xpos_output_cmds:
+                wants_xref = False
+            elif cmd in zpos_output_cmds:
+                wants_zref = False
+            elif cmd in ignorable_cmds:
+                pass
+            elif wants_xref or wants_zref:
+                raise e1
                 
     except IndexError as e:
-        print(e, "\n", e2)
-    except SyntaxError as e:
-        print(e)
+        raise SyntaxError(e, "\n", e2)
     
 def remove_superfluous_output_commands(mothball_cmd):
     output_cmds = {"outx", "outz", "xmm", "zmm", "xb", "zb", "outvx", "outvz", "vec", "print"}
@@ -151,7 +157,7 @@ def remove_superfluous_output_commands(mothball_cmd):
     for cmd in output_cmds:
         mothball_cmd = mothball_cmd.replace(f"{cmd} ", "")
 
-    mothball_cmd = mothball_cmd.split()
+    mothball_cmd = get_split_mothball_cmd(mothball_cmd)
     for i in range(len(mothball_cmd)):
         for cmd in other_output_cmds:
             if cmd in mothball_cmd[i]:
@@ -189,14 +195,13 @@ def parse_constraints(captured):
     prev_xcmd = 0
     prev_zcmd = 0
     for cmd, args in captured:
-
         contains_constraint = any(map(lambda x: ("<" in x or ">" in x), args))
         if cmd in xpos_output_cmds and contains_constraint:
-            constraints.append(constraint(args, "x", tuple(x_ref)))
+            constraints.append(constraint(args, "X", tuple(x_ref)))
             cmd_indx += 1
             prev_xcmd = cmd_indx
         elif cmd in zpos_output_cmds and contains_constraint:
-            constraints.append(constraint(args, "z", tuple(z_ref)))
+            constraints.append(constraint(args, "Z", tuple(z_ref)))
             cmd_indx += 1
             prev_zcmd = cmd_indx
         elif cmd in xpos_output_cmds and not contains_constraint:
@@ -218,32 +223,6 @@ def parse_constraints(captured):
             z_ref.add(prev_zcmd)
 
     return constraints
-
-def cleanse_repeat_taps(pools, pools_offset):
-    to_delete = set()
-
-    for i1 in range(len(pools)):
-        for j1 in range(len(pools[i1])):
-            for j2 in range(j1 + 1, len(pools[i1])): # i2 == i1
-                if pools_offset[i1][j1] == pools_offset[i1][j2]:
-                    to_delete.add((i1, j2))
-
-
-            for i2 in range(i1 + 1, len(pools)):
-                for j2 in range(len(pools[i2])):
-                    if pools_offset[i1][j1] == pools_offset[i2][j2]:
-                        to_delete.add((i2, j2))
-
-    rows = defaultdict(list)
-    for i, j in to_delete:
-        rows[i].append(j)
-
-    for i, js in rows.items():
-        for j in sorted(js, reverse=True):
-            del pools[i][j]
-            del pools_offset[i][j]
-
-    return pools, pools_offset
 
 def find_next_critical_char(s, i, crit):
     critical_characters = crit
@@ -290,7 +269,7 @@ def corner_parser(s):
     if len(tokens) > 2:
         SyntaxError("Didn't expect more than 2 args for corners for multi axis!")
     
-    extra_dists =  {"mm" : 0.6, "b" : -.6, "" : 0}
+    extra_dists =  {"mm" : 0.6, "b" : -0.6, "" : 0}
 
     corners = [(0, 0)]
     for token in tokens:
@@ -341,6 +320,8 @@ def shift_list_of_goals_by_point(point, list):
     return tuple(map(lambda goal: shift_goal_by_point(point, goal), list))
 
 def sanitize_mothball_cmd(mothball_cmd: str):
+    mothball_cmd = replace_tap_mothball_commands(mothball_cmd)
+
     n = len(mothball_cmd)
     i = mothball_cmd.find("<")
     while i != -1:
@@ -357,12 +338,46 @@ def sanitize_mothball_cmd(mothball_cmd: str):
         j1 = max(mothball_cmd.rfind("(", 0, i) + 1, mothball_cmd.rfind(",", 0, i))
         temp1 = mothball_cmd.find(")", i, n) - 1
         temp2 = mothball_cmd.find(",", i, n)
-        j2 = min(temp1 if temp1 != -2 else i, temp2 if temp2 != -1 else i)
+        j2 = min(temp1 if temp1 != -2 else float("inf"), temp2 if temp2 != -1 else float("inf"))
         mothball_cmd = mothball_cmd[:j1] + mothball_cmd[j2 + 1:]
 
         i = mothball_cmd.find(">")
 
     return mothball_cmd
+
+def find_nth(haystack: str, needle: str, n: int) -> int:
+    start = haystack.find(needle)
+    while start >= 0 and n > 1:
+        # Move past the current match (use start + 1 for overlapping matches)
+        start = haystack.find(needle, start + len(needle))
+        n -= 1
+    return start
+
+def get_zero_offset(params):
+    do_frange = params["do_frange"]
+    fstart, fend, fstep = float(params["fstart"]), float(params["fend"]), float(params["fstep"])
+    if do_frange:
+        assert fstart < fend
+    fsteps = math.ceil((fend - fstart)/fstep)
+    match params["axis"]:
+        case "XZ":
+            if do_frange:
+                zero_offset = [(0, 0) for _ in range(fsteps + 1)]
+            else:
+                zero_offset = (0, 0)
+
+        case "X":
+            if do_frange:
+                zero_offset = [0 for _ in range(fsteps + 1)]
+            else:
+                zero_offset = 0
+        case "Z":
+            if do_frange:
+                zero_offset = [0 for _ in range(fsteps + 1)]
+            else:
+                zero_offset = 0
+
+    return zero_offset
 
 if __name__ == "__main__":
     print(remove_spaces_inside_brackets_and_strip_and_lower("v(\"1.21.5\") f(-16) sa.wd(8) s.wd zmm(.125, <0) outx(-.5625, >0) | sj sa.wa(8) outx(.5625, <0) x(0) sa.wa outz(2.4375, >0) sa.wa(2) outx(.4375, >0)", include_chevrons=False))

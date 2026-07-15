@@ -1,0 +1,12 @@
+key:wasd
+notation:[count](run_ticks and name == "s"|sn{run_ticks}t)(run_ticks and name == "u"|w{run_ticks}t)(run_ticks and name == "r"|r{run_ticks}t)(_n and not run_ticks|×)(_n|{_n}t)[prefix][name][key]
+prefix:j
+args:airtime=12, run_ticks=0
+conditions:
+
+s
+sn.key[modifiers]({run_ticks}) snj.key[modifiers]({_n}) sta(max({airtime} - {_n}, 0))
+u
+w.key[modifiers]({run_ticks}) wj.key[modifiers]({_n}) sta(max({airtime} - {_n}, 0))
+r
+s.key[modifiers]({run_ticks}) sj.key[modifiers]({_n}) sta(max({airtime} - {_n}, 0))

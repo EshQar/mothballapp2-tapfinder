@@ -299,7 +299,6 @@ def single_axis_corner_parser(s):
 
 
     length, rest = fetch_parts(s)
-    print(rest, rest[1:])
     length += extra_dists[rest[1:]] * sign(length)
     corners = [0, length]
 

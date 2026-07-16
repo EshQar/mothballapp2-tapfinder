@@ -116,7 +116,6 @@ pub struct SingleAxisPoolIteratorConglomerate<'a> {
     iterators: Vec<PoolIteratorImpl<'a>>,
     count_of_pools: usize,
     pivot: usize,
-    pub pos: f32,
 }
 
 impl<'a> SingleAxisPoolIteratorConglomerate<'a> {
@@ -136,12 +135,10 @@ impl<'a> SingleAxisPoolIteratorConglomerate<'a> {
                 })
                 .collect();
 
-        let init_pos = iterators.iter().map(|i| i.state()).sum();
         Self {
             iterators,
             count_of_pools,
             pivot: 0,
-            pos: init_pos,
         }
     }
 }
@@ -162,14 +159,12 @@ impl<'a> Conglomerate for SingleAxisPoolIteratorConglomerate<'a> {
             return self.advance()
         } else {
             self.pivot = 0;
-
-            self.pos = self.iterators.iter().map(|i| i.state()).sum();
             return false
         }
     }
 
     fn pos(&self) -> Self::Pos {
-        return self.pos;
+        return self.iterators.iter().map(|i| i.state()).sum();
     }
 
     fn weight_state(&self) -> Vec<&[isize]> {

@@ -226,7 +226,6 @@ pub struct PoolIteratorConglomerate<'a> {
     iterators: Vec<PoolIteratorImpl<'a>>,
     count_of_pools: usize,
     pivot: usize,
-    pub pos: (f32, f32),
 }
 
 impl<'a> PoolIteratorConglomerate<'a> {
@@ -246,12 +245,10 @@ impl<'a> PoolIteratorConglomerate<'a> {
                 })
                 .collect();
 
-        let init_pos = iterators.iter().map(|i| i.state()).fold((0.0f32, 0.0f32), |(ax, ay), (x, y)| {(ax + x, ay + y)});
         Self {
             iterators,
             count_of_pools,
             pivot: 0,
-            pos: init_pos,
         }
     }
 }
@@ -272,14 +269,12 @@ impl<'a> Conglomerate for PoolIteratorConglomerate<'a> {
             return self.advance()
         } else {
             self.pivot = 0;
-
-            self.pos = self.iterators.iter().map(|i| i.state()).fold((0.0f32, 0.0f32), |(ax, ay), (x, y)| {(ax + x, ay + y)});
             return false
         }
     }
 
     fn pos(&self) -> Self::Pos {
-        return self.pos
+        return self.iterators.iter().map(|i| i.state()).fold((0.0f32, 0.0f32), |(ax, ay), (x, y)| {(ax + x, ay + y)});
     }
 
     fn weight_state(&self) -> Vec<&[isize]> {
@@ -292,7 +287,6 @@ pub struct RotationPoolIteratorConglomerate<'a> {
     count_of_pools: usize,
     pivot: usize,
     pub facing_index: usize,
-    pub pos: (f32, f32),
 }
 
 impl<'a> RotationPoolIteratorConglomerate<'a> {
@@ -312,13 +306,11 @@ impl<'a> RotationPoolIteratorConglomerate<'a> {
                 })
                 .collect();
 
-        let init_pos = iterators.iter().map(|i| i.state(0)).fold((0.0f32, 0.0f32), |(ax, ay), (x, y)| {(ax + x, ay + y)});
         Self {
             iterators,
             count_of_pools,
             pivot: 0,
             facing_index: 0,
-            pos: init_pos,
         }
     }
 }
@@ -339,14 +331,12 @@ impl<'a> Conglomerate for RotationPoolIteratorConglomerate<'a> {
             return self.advance()
         } else {
             self.pivot = 0;
-
-            self.pos = self.iterators.iter().map(|i| i.state(self.facing_index)).fold((0.0f32, 0.0f32), |(ax, ay), (x, y)| {(ax + x, ay + y)});
             return false
         }
     }
 
     fn pos(&self) -> Self::Pos {
-        return self.pos
+        return self.iterators.iter().map(|i| i.state(self.facing_index)).fold((0.0f32, 0.0f32), |(ax, ay), (x, y)| {(ax + x, ay + y)})
     }
 
     fn weight_state(&self) -> Vec<&[isize]> {
@@ -386,7 +376,7 @@ impl Goal<(f32, f32)> for XZGoal {
     type Dist = (f32, f32, f32, f32);
 
     fn is_satisfied(&self, point: (f32, f32)) -> bool {
-        return (self.start.0 < point.0 && point.0 < self.end.0) && (self.start.1 < point.1 && point.1 < self.end.1)
+        return (self.start.0 < point.0 && point.0 < self.end.0) && (self.start.1 < point.1 && point.1 < self.end.1);
     }
 
     fn get_quality(&self, point: (f32, f32)) -> f32 {

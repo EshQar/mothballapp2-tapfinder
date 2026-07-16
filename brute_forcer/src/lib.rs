@@ -92,7 +92,7 @@ mod brute_forcer {
                                 strat_offsets[i].push(curr_pos);
                                 dists[i].push(goal[fi].get_dists(curr_pos));
                                 prev_quality[i] = f32::INFINITY;
-                                facings[i].push(len_facings);
+                                facings[i].push(len_facings + 1);
                             }
 
                             quality[i] = goal[fi].get_quality(curr_pos);
@@ -116,7 +116,7 @@ mod brute_forcer {
         let mut strat_facings: Vec<f32> = Vec::with_capacity(len_facings/2);
         for j in 0..len_goals {
             for i in 1..facings[j].len() {
-                if facings[j][i] != len_facings {
+                if facings[j][i] != len_facings + 1 {
                     strat_facings.push(fstart + fstep * facings[j][i] as f32);
                 } 
                 else {

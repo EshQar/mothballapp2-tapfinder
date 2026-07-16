@@ -376,7 +376,7 @@ impl Goal<(f32, f32)> for XZGoal {
     type Dist = (f32, f32, f32, f32);
 
     fn is_satisfied(&self, point: (f32, f32)) -> bool {
-        return (self.start.0 < point.0 && point.0 < self.end.0) && (self.start.1 < point.1 && point.1 < self.end.1);
+        return (self.start.0 < point.0 && point.0 < self.end.0) && (self.start.1 < point.1 && point.1 < self.end.1)
     }
 
     fn get_quality(&self, point: (f32, f32)) -> f32 {

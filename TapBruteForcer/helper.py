@@ -295,26 +295,27 @@ def single_axis_corner_parser(s):
     if len(tokens) > 1:
         SyntaxError("Didn't expect more than 1 args for corners for single axis!")
     
-    extra_dists =  {"mm" : 0.6, "b" : -.6}
+    extra_dists =  {"mm" : 0.6, "b" : -.6, "" : 0}
 
 
     length, rest = fetch_parts(s)
-    length = extra_dists[rest[0:]] * sign(length)
+    print(rest, rest[1:])
+    length += extra_dists[rest[1:]] * sign(length)
     corners = [0, length]
 
     return corners
 
 def shift_by_point(q, point):
-    if type(q) == float:
-        return point + q
+    if type(q) == float or type(q) == int:
+        return q - point
     elif type(q) == list or type(q) == tuple:
-        return (point[0] + q[0], point[1] + q[1])
+        return (q[0] - point[0], q[1] - point[1])
     else:
         raise TypeError("Argument q wasn't of an anticipated type!")
 
 def shift_goal_by_point(point, goal):
     start, end = goal
-    return (shift_by_point(point, start), shift_by_point(point, end))
+    return (shift_by_point(start, point), shift_by_point(end, point))
 
 def shift_list_of_goals_by_point(point, list):
     return tuple(map(lambda goal: shift_goal_by_point(point, goal), list))

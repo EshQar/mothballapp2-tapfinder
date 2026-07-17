@@ -348,32 +348,31 @@ def sanitize_mothball_cmd(mothball_cmd: str):
 def find_nth(haystack: str, needle: str, n: int) -> int:
     start = haystack.find(needle)
     while start >= 0 and n > 1:
-        # Move past the current match (use start + 1 for overlapping matches)
         start = haystack.find(needle, start + len(needle))
         n -= 1
     return start
 
 def get_zero_offset(params):
     do_frange = params["do_frange"]
-    fstart, fend, fstep = float(params["fstart"]), float(params["fend"]), float(params["fstep"])
+    fstart, fend, fsteps = float(params["fstart"]), float(params["fend"]), int(params["fsteps"])
     if do_frange:
         assert fstart < fend
-    fsteps = math.ceil((fend - fstart)/fstep)
+
     match params["axis"]:
         case "XZ":
             if do_frange:
-                zero_offset = [(0, 0) for _ in range(fsteps + 1)]
+                zero_offset = [(0, 0) for _ in range(fsteps)]
             else:
                 zero_offset = (0, 0)
 
         case "X":
             if do_frange:
-                zero_offset = [0 for _ in range(fsteps + 1)]
+                zero_offset = [0 for _ in range(fsteps)]
             else:
                 zero_offset = 0
         case "Z":
             if do_frange:
-                zero_offset = [0 for _ in range(fsteps + 1)]
+                zero_offset = [0 for _ in range(fsteps)]
             else:
                 zero_offset = 0
 

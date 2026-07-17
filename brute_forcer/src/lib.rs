@@ -1,8 +1,5 @@
 use pyo3::prelude::*;
 
-// To do:
-// Eliminate recursion in .advance()
-
 mod models;
 
 mod xz_models;

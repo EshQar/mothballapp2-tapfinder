@@ -55,8 +55,7 @@ class Worker(QObject):
                 self.finished.emit(self.p.output, {}, 1)
         except Exception as e:
             error_string = traceback.format_exc()
-            print(error_string)
-            self.finished.emit([(ExpressionType.GENERAL_LABEL, (f"Error occurred: {str(e)}",))], {}, 0)
+            self.finished.emit([(ExpressionType.GENERAL_LABEL, (f"Error occurred: {e}\n\nFull traceback: {error_string}",))], {}, 0)
         self.isrunning = False
 
     def cancel(self):
@@ -116,14 +115,15 @@ class SimulationSection(Cell):
 
                 "goal_type" : "mothball",
                 "axis" : "XZ",
-                "mothball" : "",
+                "mothball" : "...",
 
                 "n" : 5,
                 "f" : "0",
                 "do_frange" : False,
-                "fstart" : 0,
-                "fend" : 0,
-                "fstep" : 0.05,
+                "fstart" : "...",
+                "fend" : "...",
+                "fstep" : "...",
+                "fsteps" : 0,
                 "xmin" : float("-inf"),
                 "xmax" : float("inf"),
                 "zmin" : float("-inf"),
@@ -133,7 +133,7 @@ class SimulationSection(Cell):
                 "ztarget" : 0,
                 "zerror" : float("inf"),
                 "packages" : "",
-                "corners" : "",
+                "corners" : "...",
                 "sortby" : "zmin",
                 "version" : "1.8",
                 "dp" : 6,
@@ -441,7 +441,9 @@ class SimulationSection(Cell):
         self.cell_name.setText(data['name'])
         self.output_field.renderTextfromOutput(self.linter, data['raw_output'])
         self.raw_output = data['raw_output']
-        self.tap_params = data['tap_params']
+        for key in self.tap_params.keys():
+            if (not data['tap_params'][key] == None) and (not data['tap_params'][key] == ""):
+                self.tap_params[key] = data['tap_params'][key]
 
         self.load_tap_bf_params()
     

@@ -15,6 +15,8 @@ import os, sys
 from Enums import *
 import datetime
 
+from html import escape as html_escape
+
 
 if getattr(sys, "frozen", False):
     base_path = sys._MEIPASS
@@ -297,6 +299,7 @@ class RenderViewer(QTextBrowser):
         # print(tokens)
         for i, element in enumerate(tokens):
             token, style, in_code = element
+            token = html_escape(token)
             if token and (token.endswith("\n") or token.endswith("\r\n")) and (i+1 < len(tokens) and tokens[i+1][2] == 1 and in_code == 0):
                 token = token.strip()
 

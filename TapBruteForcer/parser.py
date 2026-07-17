@@ -3,6 +3,7 @@ import re
 import TapBruteForcer.helper as helper
 import numpy as np
 import math
+from ExprEval import evaluate
 
 def get_new_params(curr_params, curr_text, strict=True):
     param_names = {
@@ -96,10 +97,18 @@ def get_new_params(curr_params, curr_text, strict=True):
                     params["fstart"], params["fend"] = arg_val
 
                 params["do_frange"] = True
+                if float(params["fstep"]) != 0:
+                    params["fsteps"] = math.ceil((float(params["fend"]) - float(params["fstart"]))/float(params["fstep"]))
+                else:
+                    if strict:
+                        raise ZeroDivisionError("fstep cannot be 0!")
+                    params["fsteps"] = 0
                 found_params.add("f")
                 found_params.add("fend")
                 found_params.add("fstart")
                 found_params.add("fstep")
+            else:
+                params["do_frange"] = False
 
     if strict:
         if expected_params - found_params:
@@ -187,7 +196,7 @@ def mothball_to_goal(mothball_cmd, axis="XZ"):
             ineq, x, axis, ref = constraint
             tot_ref = sum(map(lambda i: outs[i], ref))
 
-            constrain(axis, ineq, float(x) - outs[i] - tot_ref)
+            constrain(axis, ineq, evaluate(x, variables={"px" : 0.0625}) - outs[i] - tot_ref)
 
     constraints = helper.parse_constraints(captured)
     init_constraints(constraints, outs)

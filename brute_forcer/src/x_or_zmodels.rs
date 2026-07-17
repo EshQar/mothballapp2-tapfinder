@@ -147,19 +147,18 @@ impl<'a> Conglomerate for SingleAxisPoolIteratorConglomerate<'a> {
     type Pos = f32;
 
     fn advance(&mut self) -> bool {
-        if self.iterators[self.pivot].advance() {
+        loop {
+            if self.iterators[self.pivot].advance() {
+                self.iterators[self.pivot].reset();
+                self.pivot += 1;
 
-            self.iterators[self.pivot].reset();
-            self.pivot += 1;
-
-            if self.pivot >= self.count_of_pools {
-                return true
+                if self.pivot >= self.count_of_pools {
+                    return true
+                }
+            } else {
+                self.pivot = 0;
+                return false
             }
-
-            return self.advance()
-        } else {
-            self.pivot = 0;
-            return false
         }
     }
 

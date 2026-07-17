@@ -169,23 +169,22 @@ impl SignedCompositions {
     }
 
     fn advance_sign(&mut self) -> bool {
-        if self.base.current[self.pivot] > 0 {
-            self.base.current[self.pivot] *= -1;
-            self.pivot = 0
-
-        } else if self.base.current[self.pivot] <= 0 {
-            self.base.current[self.pivot] *= -1;
-            self.pivot += 1;
-
-            if self.pivot >= self.base.parts {
+        loop {
+            if self.base.current[self.pivot] > 0 {
+                self.base.current[self.pivot] *= -1;
                 self.pivot = 0;
-                return true
+
+                return false
+            } else if self.base.current[self.pivot] <= 0 {
+                self.base.current[self.pivot] *= -1;
+                self.pivot += 1;
+
+                if self.pivot >= self.base.parts {
+                    self.pivot = 0;
+                    return true
+                }
             }
-
-            return self.advance_sign();
         }
-
-        false
     }
 
     pub fn advance(&mut self) -> bool {

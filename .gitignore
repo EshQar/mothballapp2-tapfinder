@@ -15,6 +15,7 @@ text.txt
 input.txt
 output.txt
 benchmark.py
+new_code.txt
 /target/
 
 # PyInstaller output

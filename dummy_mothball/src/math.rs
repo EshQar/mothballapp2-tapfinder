@@ -2,6 +2,7 @@
 
 pub fn mcsin(total_angles: i32, pi: f32, rad: f32) -> f32 {
     if total_angles == -1 {
+        println!("float precision might have been compromised");
         return rad.sin();
     } else if total_angles == 65536 {
         let index = (rad * 10430.378_f32) as i32 & 65535;
@@ -15,6 +16,7 @@ pub fn mcsin(total_angles: i32, pi: f32, rad: f32) -> f32 {
 
 pub fn mccos(total_angles: i32, pi: f32, rad: f32) -> f32 {
     if total_angles == -1 {
+        println!("float precision might have been compromised");
         return rad.cos();
     } else if total_angles == 65536 {
         let index = ((rad * 10430.378_f32 + 16384.0_f32) as i32) & 65535;

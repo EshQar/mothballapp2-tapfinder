@@ -1039,7 +1039,7 @@ impl PlayerSimulationXZ {
         &mut self,
         duration: i32,
         rotation: Option<f32>,
-        rotation_offset: f32,
+        rotation_offset: f64,
         slip: Option<f32>,
         is_sprinting: bool,
         is_sneaking: bool,
@@ -1079,7 +1079,7 @@ impl PlayerSimulationXZ {
         &mut self,
         duration: i32,
         rotation: Option<f32>,
-        rotation_offset: f32,
+        rotation_offset: f64,
         slip: Option<f32>,
         is_sprinting: bool,
         is_sneaking: bool,
@@ -1092,9 +1092,9 @@ impl PlayerSimulationXZ {
 
         // Setting slipperiness here and treating it like air is analytically and numerically equivalent
         if self.modifiers & Simulation::WATER as i32 != 0 {
-            slip = Some(0.8f32 / 0.91f32);
+            slip = Some((0.8f64 / 0.91f64) as f32);
         } else if self.modifiers & Simulation::LAVA as i32 != 0 {
-            slip = Some(0.5f32 / 0.91f32);
+            slip = Some((0.5f64 / 0.91f64) as f32);
         }
 
         let mut sj_boost = Simulation::OLD_SPRINTJUMP_BOOST;
@@ -1124,7 +1124,7 @@ impl PlayerSimulationXZ {
 
         if let Some(rot) = rotation {
             override_rotation = true;
-            rotation = Some(rot + rotation_offset);
+            rotation = Some(((rot as f64) + rotation_offset) as f32);
         }
 
         // If slip is not given, assume ground slip
@@ -1136,7 +1136,7 @@ impl PlayerSimulationXZ {
 
         for _ in 0..duration {
             if !override_rotation {
-                rotation = Some(self.get_angle() + rotation_offset);
+                rotation = Some((self.get_angle() as f64 + rotation_offset) as f32);
             }
 
             let rotation = rotation.unwrap();
@@ -1159,8 +1159,8 @@ impl PlayerSimulationXZ {
             }
 
             // Finalize Momentum
-            self.vx *= 0.91 * self.previous_slip.unwrap() as f64;
-            self.vz *= 0.91 * self.previous_slip.unwrap() as f64;
+            self.vx *= (0.91f32 * self.previous_slip.unwrap()) as f64;
+            self.vz *= (0.91f32 * self.previous_slip.unwrap()) as f64;
 
             // Apply inertia or web
             if self.inertia_axis == 1 {
@@ -1200,16 +1200,16 @@ impl PlayerSimulationXZ {
 
             // BLOCKING
             if self.modifiers & Simulation::BLOCK as i32 != 0 {
-                forward *= 0.2;
-                strafe *= 0.2;
+                forward = (forward as f64 * 0.2f64) as f32;
+                strafe = (strafe as f64 * 0.2f64) as f32;
             }
 
             // SNEAKING
             if (self.sneak_delay && self.previously_sneaking)
                 || (!self.sneak_delay && is_sneaking)
             {
-                forward *= 0.3;
-                strafe *= 0.3;
+                forward = (forward as f64 * 0.3f64) as f32;
+                strafe = (strafe as f64 * 0.3f64) as f32;
             }
 
             forward *= 0.98;
@@ -1218,7 +1218,7 @@ impl PlayerSimulationXZ {
             let mut distance = strafe * strafe + forward * forward;
 
             if distance >= 0.0001 {
-                distance = distance.sqrt();
+                distance = (distance as f64).sqrt() as f32;
 
                 if distance < 1.0 {
                     distance = 1.0;
@@ -1230,11 +1230,11 @@ impl PlayerSimulationXZ {
                 strafe *= distance;
 
                 let sin_yaw = self.mcsin(
-                    rotation * Simulation::PI as f32 / 180.0
+                    rotation * (Simulation::PI as f32) / 180.0
                 );
 
                 let cos_yaw = self.mccos(
-                    rotation * Simulation::PI as f32 / 180.0
+                    rotation * (Simulation::PI as f32) / 180.0
                 );
 
                 self.vx += (strafe * cos_yaw - forward * sin_yaw) as f64;
@@ -1288,7 +1288,7 @@ impl PlayerSimulationXZ {
         &mut self,
         duration: i32,
         rotation: Option<f32>,
-        rotation_offset: f32,
+        rotation_offset: f64,
         slip: Option<f32>,
         is_sprinting: bool,
         is_sneaking: bool,
@@ -1301,9 +1301,9 @@ impl PlayerSimulationXZ {
 
         // Setting slipperiness here and treating it like air is analytically and numerically equivalent
         if self.modifiers & Simulation::WATER as i32 != 0 {
-            slip = Some(0.8f32 / 0.91f32);
+            slip = Some((0.8f64 / 0.91f64) as f32);
         } else if self.modifiers & Simulation::LAVA as i32 != 0 {
-            slip = Some(0.5f32 / 0.91f32);
+            slip = Some((0.5f64 / 0.91f64) as f32);
         }
 
         let mut sj_boost = Simulation::NEW_SPRINTJUMP_BOOST;
@@ -1333,7 +1333,7 @@ impl PlayerSimulationXZ {
 
         if let Some(rot) = rotation {
             override_rotation = true;
-            rotation = Some(rot + rotation_offset);
+            rotation = Some((rot as f64 + rotation_offset) as f32);
         }
 
         // If slip is not given, assume its ground slip since air slip (0.1) is always passed into the argument
@@ -1345,7 +1345,7 @@ impl PlayerSimulationXZ {
 
         for _ in 0..duration {
             if !override_rotation {
-                rotation = Some(self.get_angle() + rotation_offset);
+                rotation = Some((self.get_angle() as f64 + rotation_offset) as f32);
             }
 
             let rotation = rotation.unwrap();
@@ -1397,7 +1397,7 @@ impl PlayerSimulationXZ {
                 is_sprinting,
                 speed,
                 slow,
-                self.state.clone(),
+                &self.state,
             );
 
             // Sprint jump boost
@@ -1410,16 +1410,16 @@ impl PlayerSimulationXZ {
 
             // BLOCKING
             if self.modifiers & Simulation::BLOCK as i32 != 0 {
-                forward *= 0.2;
-                strafe *= 0.2;
+                forward = (forward as f64 * 0.2f64) as f32;
+                strafe = (strafe as f64 * 0.2f64) as f32;
             }
 
             // SNEAKING
             if (self.sneak_delay && self.previously_sneaking)
                 || (!self.sneak_delay && is_sneaking)
             {
-                forward *= 0.3;
-                strafe *= 0.3;
+                forward = (forward as f64 * 0.3f64) as f32;
+                strafe = (strafe as f64 * 0.3f64) as f32;
             }
 
             forward *= 0.98;
@@ -1433,12 +1433,12 @@ impl PlayerSimulationXZ {
 
             if distance >= 1e-7 {
                 // Normalize distance IF above 1
-                distance = distance.sqrt() as f32 as f64;
+                let distancef32 = distance.sqrt() as f32;
 
-                if distance < 1.0 {
-                    distance = 1.0;
+                if distancef32 < 1.0f64 as f32 {
+                    distance = 1.0f64 as f64;
                 } else {
-                    distance += 0.0000001125593117;
+                    distance = distancef32 as f64 + 0.0000001125593117f64;
                 }
 
                 // Modifies strafe and forward to account for movement
@@ -1448,8 +1448,8 @@ impl PlayerSimulationXZ {
                 strafe *= distance;
 
                 // Adds rotated vectors to velocity
-                let sin_yaw = self.mcsin(rotation * 0.017453292f32);
-                let cos_yaw = self.mccos(rotation * 0.017453292f32);
+                let sin_yaw = self.mcsin(rotation * 0.017453292f64 as f32);
+                let cos_yaw = self.mccos(rotation * 0.017453292f64 as f32);
 
                 self.vx += strafe * cos_yaw as f64 - forward * sin_yaw as f64;
                 self.vz += forward * cos_yaw as f64 + strafe * sin_yaw as f64;
@@ -1769,7 +1769,7 @@ impl PlayerSimulationXZ {
             if (self.air_sprint_delay && self.previously_sprinting)
                 || (!self.air_sprint_delay && is_sprinting)
             {
-                m = m + m * 0.3;
+                m = (m as f64 + m as f64 * 0.3f64) as f32;
             }
         } else {
             // either on jump or on ground
@@ -1777,15 +1777,15 @@ impl PlayerSimulationXZ {
 
             // Deal with potion effects
             if speed > 0 {
-                m = m * (1.0 + 0.2 * speed as f32);
+                m = (m as f64 * (1.0f64 + (0.2f32 as f64) * (speed as f64))) as f32;
             }
 
             if slow > 0 {
-                m = m * (1.0_f32 + (-0.15) * slow as f32).max(0.0);
+                m = (m as f64 * (1.0f64 + (-0.15f32 as f64) * slow as f64).max(0.0f64)) as f32;
             }
 
             if is_sprinting {
-                m = m * (1.0 + 0.3);
+                m = (m as f64 * (1.0 + 0.3f32 as f64)) as f32;
             }
 
             let drag = 0.91 * slip;
@@ -1801,7 +1801,7 @@ impl PlayerSimulationXZ {
         is_sprinting: bool,
         speed: i32,
         slow: i32,
-        state: State,
+        state: &State,
     ) -> f32 {
         /*
         Calculates and returns the movement multiplier `M`.
@@ -1824,7 +1824,7 @@ impl PlayerSimulationXZ {
             if (self.air_sprint_delay && self.previously_sprinting)
                 || (!self.air_sprint_delay && is_sprinting)
             {
-                m = m + m * 0.3;
+                m = (m as f64 + m as f64 * 0.3f64) as f32;
             }
         } else {
             // either on jump or on ground
@@ -1832,18 +1832,18 @@ impl PlayerSimulationXZ {
 
             // Deal with potion effects
             if speed > 0 {
-                m = m * (1.0 + 0.2 * speed as f32);
+                m = (m as f64 * (1.0f64 + (0.2f32 as f64) * speed as f64)) as f32;
             }
 
             if slow > 0 {
-                m = m * (1.0_f32 + (-0.15) * slow as f32).max(0.0);
+                m = (m as f64 * (1.0f64 + (-0.15f32 as f64) * slow as f64).max(0.0f64)) as f32;
             }
 
             if is_sprinting {
-                m = m * (1.0 + 0.30000010133);
+                m = (m as f64 * (1.0f64 + (0.30000010133f64 as f32) as f64)) as f32;
             }
 
-            m *= 0.21600002 / (slip * slip * slip);
+            m *= (0.21600002f64 as f32) / (slip * slip * slip);
         }
 
         m
@@ -2241,7 +2241,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             slip,
             false,
             false,
@@ -2283,7 +2283,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             slip,
             true,
             false,
@@ -2318,7 +2318,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             Some(1.0),
             false,
             false,
@@ -2346,7 +2346,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             Some(1.0),
             true,
             false,
@@ -2382,7 +2382,7 @@ impl PlayerSimulationXZ {
             self.move_player(
                 1,
                 rotation,
-                0.0f32,
+                0.0f64,
                 slip,
                 false,
                 false,
@@ -2478,7 +2478,7 @@ impl PlayerSimulationXZ {
             self.move_player(
                 1,
                 rotation,
-                0.0f32,
+                0.0f64,
                 slip,
                 true,
                 false,
@@ -2502,7 +2502,7 @@ impl PlayerSimulationXZ {
             self.move_player(
                 1,
                 rotation,
-                0.0f32,
+                0.0f64,
                 slip,
                 true,
                 false,
@@ -2682,7 +2682,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             slip,
             false,
             true,
@@ -2717,7 +2717,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             Some(1.0),
             false,
             true,
@@ -2753,7 +2753,7 @@ impl PlayerSimulationXZ {
             self.move_player(
                 1,
                 rotation,
-                0.0f32,
+                0.0f64,
                 slip,
                 false,
                 true,
@@ -2793,7 +2793,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             None,
-            0.0f32,
+            0.0f64,
             slip,
             false,
             false,
@@ -2807,7 +2807,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             None,
-            0.0f32,
+            0.0f64,
             Some(1.0),
             false,
             false,
@@ -2822,7 +2822,7 @@ impl PlayerSimulationXZ {
             self.move_player(
                 1,
                 None,
-                0.0f32,
+                0.0f64,
                 slip,
                 false,
                 false,
@@ -2838,7 +2838,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             None,
-            0.0f32,
+            0.0f64,
             slip,
             false,
             true,
@@ -2852,7 +2852,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             None,
-            0.0f32,
+            0.0f64,
             Some(1.0),
             false,
             true,
@@ -2867,7 +2867,7 @@ impl PlayerSimulationXZ {
             self.move_player(
                 1,
                 None,
-                0.0f32,
+                0.0f64,
                 slip,
                 false,
                 true,
@@ -2890,7 +2890,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             slip,
             true,
             true,
@@ -2925,7 +2925,7 @@ impl PlayerSimulationXZ {
         self.move_player(
             duration,
             rotation,
-            0.0f32,
+            0.0f64,
             Some(1.0),
             true,
             true,
@@ -2961,7 +2961,7 @@ impl PlayerSimulationXZ {
             self.move_player(
                 1,
                 rotation,
-                0.0f32,
+                0.0f64,
                 slip,
                 true,
                 true,
@@ -3007,7 +3007,7 @@ impl PlayerSimulationXZ {
         slow: Option<i32>,
         slip: Option<f32>,
         is_sneaking_arg: Option<bool>,
-    ) -> f32 {
+    ) -> f64 {
         let is_sneaking = handle_keyword_arg(is_sneaking_arg, false);
         let mut player = copy_player(self);
 
@@ -3037,7 +3037,7 @@ impl PlayerSimulationXZ {
         }
 
         // print(abs(deg(arctan(-player.vx, player.vz))))
-        (-player.vx as f32).atan2(player.vz as f32).to_degrees().abs()
+        (-player.vx).atan2(player.vz).to_degrees().abs()
     }
 }
 

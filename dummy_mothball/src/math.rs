@@ -37,21 +37,21 @@ pub fn truncate_number(precision: i32, value: f64) -> String {
         .to_string()
 }
 
-pub fn mm_to_distf32(mm: f32) -> f32 {
-    mm + 0.6_f32.copysign(mm)
-}
+//pub fn mm_to_distf32(mm: f32) -> f32 {
+//    mm + 0.6_f32.copysign(mm)
+//}
 
-pub fn dist_to_blockf32(mm: f32) -> f32 {
-    mm + 0.6_f32.copysign(mm)
-}
+//pub fn dist_to_blockf32(mm: f32) -> f32 {
+//    mm + 0.6_f32.copysign(mm)
+//}
 
-pub fn dist_to_mmf32(dist: f32) -> f32 {
-    dist - 0.6_f32.copysign(dist)
-}
+//pub fn dist_to_mmf32(dist: f32) -> f32 {
+//    dist - 0.6_f32.copysign(dist)
+//}
 
-pub fn block_to_distf32(dist: f32) -> f32 {
-    dist - 0.6_f32.copysign(dist)
-}
+//pub fn block_to_distf32(dist: f32) -> f32 {
+//    dist - 0.6_f32.copysign(dist)
+//}
 
 pub fn mm_to_distf64(mm: f64) -> f64 {
     mm + 0.6_f64.copysign(mm)

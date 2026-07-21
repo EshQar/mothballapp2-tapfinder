@@ -15,7 +15,6 @@ use std::f64;
 use std::ops::Deref;
 
 // Equivalent to Python subclass of str.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct MothballSequence(pub String);
 
 impl Deref for MothballSequence {
@@ -27,15 +26,14 @@ impl Deref for MothballSequence {
 }
 
 #[repr(i32)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExpressionType {
     ZLabel = 0,
-    ZLabelWithExpression = 1,
+//    ZLabelWithExpression = 1,
     XLabel = 2,
-    XLabelWithExpression = 3,
+//    XLabelWithExpression = 3,
     GeneralLabel = 4,
     GeneralLabelWithNumber = 5,
-    GeneralLabelWithExpression = 6,
+//    GeneralLabelWithExpression = 6,
     Warning = 7,
     Text = 8,
     ZInertiaHit = 9,
@@ -45,19 +43,11 @@ pub enum ExpressionType {
 }
 
 enum OutputExpression {
-    ZLabel(String, &'static str, String),
-    ZLabelWithExpression(String, &'static str, String),
-    XLabel(String, &'static str, String),
-    XLabelWithExpression(String, &'static str, String),
     GeneralLabel(String),
     GeneralLabelWithNumber(String, &'static str, String),
     GeneralLabelWithExpression(String, &'static str, String, &'static str, String),
     Warning(&'static str, &'static str, String),
     Text(String),
-    ZInertiaMiss(String, String, &'static str, String, String),
-    ZInertiaHit(String, String, &'static str, String, String),
-    XInertiaHit(String, String, &'static str, String, String),
-    XInertiaMiss(String, String, &'static str, String, String),
     GeneralInertiaLabel(String, &'static str, String, &'static str, String, &'static str)
 }
 
@@ -320,19 +310,19 @@ pub struct Tick {
 
 impl Tick {
     pub fn new(
-        w: bool,
-        a: bool,
-        s: bool,
-        d: bool,
-        sneak: bool,
-        sprint: bool,
-        space: bool,
-        right_click: bool,
-        last_turn: f32,
-        x: Option<f32>,
-        z: Option<f32>,
-        vx: Option<f32>,
-        vz: Option<f32>,
+//        w: bool,
+//        a: bool,
+//        s: bool,
+//        d: bool,
+//        sneak: bool,
+//        sprint: bool,
+//        space: bool,
+//        right_click: bool,
+//        last_turn: f32,
+//        x: Option<f32>,
+//        z: Option<f32>,
+//        vx: Option<f32>,
+//        vz: Option<f32>,
     ) -> Self {
         Self {
 //            w,
@@ -452,28 +442,8 @@ impl Simulation {
         "sneakstopjump",
     ];
 
-    pub fn mm_to_dist(mm: f32) -> f32 {
-        mm + mm.signum() * 0.6
-    }
-
-    pub fn dist_to_mm(dist: f32) -> f32 {
-        dist - dist.signum() * 0.6
-    }
-
-    pub fn dist_to_block(mm: f32) -> f32 {
-        Self::mm_to_dist(mm)
-    }
-
-    pub fn block_to_dist(dist: f32) -> f32 {
-        Self::dist_to_mm(dist)
-    }
-
     pub const OLD_SPRINTJUMP_BOOST: f32 = 0.2;
     pub const NEW_SPRINTJUMP_BOOST: f64 = 0.2;
-
-    pub const JUMP: i32 = 0;
-    pub const GROUND: i32 = 1;
-    pub const AIR: i32 = 2;
 
     pub const OLD_COMPUTATION: i32 = 0;
     pub const NEW_COMPUTATION: i32 = 1;
@@ -640,7 +610,7 @@ pub struct PlayerSimulationXZ {
 
     pub history: Vec<Tick>,
 
-    macros: HashMap<String, String>,
+//    macros: HashMap<String, String>,
     pub functions: HashMap<i32, Function>,
     pub alias_to_id_map: HashMap<String, i32>,
 }
@@ -654,9 +624,9 @@ impl PlayerSimulationXZ {
         }
     }
 
-    pub fn get_function(&self, alias: &str) -> &Function {
-        &self.functions[&self.alias_to_id_map[alias]]
-    }
+//    pub fn get_function(&self, alias: &str) -> &Function {
+//        &self.functions[&self.alias_to_id_map[alias]]
+//    }
 
     pub fn has_function(&self, alias: &str) -> bool {
         self.functions.contains_key(&self.alias_to_id_map[alias])
@@ -678,67 +648,9 @@ impl PlayerSimulationXZ {
 }
 
 impl PlayerSimulationXZ {
-    pub fn optimize_xz<F>(
-        &self,
-        x: f64,
-        z: f64,
-        sequence: &str,
-        conversion: F,
-    ) -> (f64, f64)
-    where
-        F: Fn(f64) -> f64,
-    {
-        let mut p1 = copy_player(self);
-        p1.inertia_threshold = 0.0;
-        p1.simulate(sequence.to_string(), true, None, true);
-
-        let mut p2 = copy_player(self);
-        p2.inertia_threshold = 0.0;
-        p2.vz = 1.0;
-        p2.vx = 1.0;
-        p2.simulate(sequence.to_string(), true, None, true);
-
-        if true {
-            if p1.x == p2.x {
-                panic!(
-                    "Float division by 0, perhaps you reset your position at the end of a sequence or nested same axis optimize functions?"
-                );
-            }
-
-            let vx = (p1.x - conversion(x)) / (p1.x - p2.x);
-
-            if true {
-                if p1.z == p2.z {
-                    panic!(
-                        "Float division by 0, perhaps you reset your position at the end of a sequence or nested same axis optimize functions?"
-                    );
-                }
-
-                let vz = (p1.z - conversion(z)) / (p1.z - p2.z);
-
-                (vx, vz) // return (vx, vz)
-            } else {
-                panic!() // return vx
-            }
-        } else if z != 0.0 {
-            if p1.z == p2.z {
-                panic!(
-                    "Float division by 0, perhaps you reset your position at the end of a sequence or nested same axis optimize functions?"
-                );
-            }
-
-            let vz = (p1.z - conversion(z)) / (p1.z - p2.z);
-
-            panic!() // return vz
-        } else {
-            panic!()
-        }
-    }
-
     pub fn optimize_x<F>(
         &self,
         x: f64,
-        z: f64,
         sequence: &str,
         conversion: F,
     ) -> f64
@@ -770,9 +682,6 @@ impl PlayerSimulationXZ {
                         "Float division by 0, perhaps you reset your position at the end of a sequence or nested same axis optimize functions?"
                     );
                 }
-
-                let vz = (p1.z - conversion(z)) / (p1.z - p2.z);
-
                 panic!() // return (vx, vz)
             } else {
                 vx // return vx
@@ -783,9 +692,6 @@ impl PlayerSimulationXZ {
                     "Float division by 0, perhaps you reset your position at the end of a sequence or nested same axis optimize functions?"
                 );
             }
-
-            let vz = (p1.z - conversion(z)) / (p1.z - p2.z);
-
             panic!() // return vz
         } else {
             panic!()
@@ -794,7 +700,6 @@ impl PlayerSimulationXZ {
 
     pub fn optimize_z<F>(
         &self,
-        x: f64,
         z: f64,
         sequence: &str,
         conversion: F,
@@ -819,16 +724,12 @@ impl PlayerSimulationXZ {
                 );
             }
 
-            let vx = (p1.x - conversion(x)) / (p1.x - p2.x);
-
             if z != 0.0 {
                 if p1.z == p2.z {
                     panic!(
                         "Float division by 0, perhaps you reset your position at the end of a sequence or nested same axis optimize functions?"
                     );
                 }
-
-                let vz = (p1.z - conversion(z)) / (p1.z - p2.z);
 
                 panic!() // return (vx, vz)
             } else {
@@ -1009,7 +910,7 @@ impl PlayerSimulationXZ {
 
             history: Vec::new(),
 
-            macros: HashMap::new(),
+//            macros: HashMap::new(),
 
             alias_to_id_map,
             functions: funcs.into_iter().collect()
@@ -1266,19 +1167,19 @@ impl PlayerSimulationXZ {
             self.inertialistener_helper();
 
             self.history.push(Tick::new(
-                self.inputs.contains('w'),
-                self.inputs.contains('a'),
-                self.inputs.contains('s'),
-                self.inputs.contains('d'),
-                is_sneaking,
-                is_sprinting,
-                matches!(self.state, State::Jump),
-                (self.modifiers & Simulation::BLOCK as i32) != 0,
-                self.last_turn,
-                Some(self.x as f32),
-                Some(self.z as f32),
-                Some(self.vx as f32),
-                Some(self.vz as f32),
+//                self.inputs.contains('w'),
+//                self.inputs.contains('a'),
+//               self.inputs.contains('s'),
+//               self.inputs.contains('d'),
+//                is_sneaking,
+//                is_sprinting,
+//                matches!(self.state, State::Jump),
+//                (self.modifiers & Simulation::BLOCK as i32) != 0,
+//                self.last_turn,
+//                Some(self.x as f32),
+//                Some(self.z as f32),
+//                Some(self.vx as f32),
+//                Some(self.vz as f32),
             ));
         }
     }
@@ -1480,19 +1381,19 @@ impl PlayerSimulationXZ {
             self.inertialistener_helper();
 
             self.history.push(Tick::new(
-                self.inputs.contains('w'),
-                self.inputs.contains('a'),
-                self.inputs.contains('s'),
-                self.inputs.contains('d'),
-                is_sneaking,
-                is_sprinting,
-                matches!(self.state, State::Jump),
-                (self.modifiers & Simulation::BLOCK as i32) != 0,
-                self.last_turn,
-                Some(self.x as f32),
-                Some(self.z as f32),
-                Some(self.vx as f32),
-                Some(self.vz as f32),
+//                self.inputs.contains('w'),
+//                self.inputs.contains('a'),
+//                self.inputs.contains('s'),
+//                self.inputs.contains('d'),
+//                is_sneaking,
+//                is_sprinting,
+//                matches!(self.state, State::Jump),
+//                (self.modifiers & Simulation::BLOCK as i32) != 0,
+//                self.last_turn,
+//                Some(self.x as f32),
+//                Some(self.z as f32),
+//                Some(self.vx as f32),
+//                Some(self.vz as f32),
             ));
         }
     }
@@ -2153,7 +2054,7 @@ impl PlayerSimulationXZ {
                     self.local_vars.clone(),
                 );
 
-                if let Ok(parser::Data::Str(final_value)) = result {
+                if let Ok(parser::Data::Str(_)) = result {
                     ()
                 } else {
                     panic!(
@@ -2455,7 +2356,8 @@ impl PlayerSimulationXZ {
             let delay = delay;
 
             if delay > duration {
-                delay == duration;
+                println!("this mightve been a typo, double check")
+                //delay == duration;
             }
 
             let input = self.inputs.clone();
@@ -3790,7 +3692,6 @@ impl PlayerSimulationXZ {
     /// while simulating.
     pub fn bwmm(&mut self, zmm: f64, sequence: &MothballSequence) {
         let vz = self.optimize_z(
-            0.0f64,
             zmm,
             sequence,
             math::mm_to_distf64,
@@ -3821,7 +3722,7 @@ impl PlayerSimulationXZ {
     /// of `z` on the Z axis. A warning is raised if the simulation using the calculated
     /// speed doesn't match `z`, meaning that inertia was encountered while simulating.
     pub fn wall(&mut self, z: f64, sequence: &MothballSequence) {
-        let vz = self.optimize_z(0.0f64, z, sequence, |x| x);
+        let vz = self.optimize_z(z, sequence, |x| x);
 
         self.simulate(
             format!(
@@ -3850,7 +3751,6 @@ impl PlayerSimulationXZ {
     /// while simulating.
     pub fn blocks(&mut self, zb: f64, sequence: &MothballSequence) {
         let vz = self.optimize_z(
-            0.0f64,
             zb,
             sequence,
             math::block_to_distf64,
@@ -3884,7 +3784,6 @@ impl PlayerSimulationXZ {
     pub fn xbwmm(&mut self, xmm: f64, sequence: &MothballSequence) {
         let vx = self.optimize_x(
             xmm,
-            0.0f64,
             sequence,
             math::mm_to_distf64,
         );
@@ -3914,7 +3813,7 @@ impl PlayerSimulationXZ {
     /// of `x` on the X axis. A warning is raised if the simulation using the calculated
     /// speed doesn't match `x`, meaning that inertia was encountered while simulating.
     pub fn xwall(&mut self, x: f64, sequence: &MothballSequence) {
-        let vx = self.optimize_x(x, 0.0f64, sequence, |x| x);
+        let vx = self.optimize_x(x, sequence, |x| x);
 
         self.simulate(
             format!(
@@ -3944,7 +3843,6 @@ impl PlayerSimulationXZ {
     pub fn xblocks(&mut self, xb: f64, sequence: &MothballSequence) {
         let vx = self.optimize_x(
             xb,
-            0.0f64,
             sequence,
             math::block_to_distf64,
         );
@@ -4039,18 +3937,6 @@ impl PlayerSimulationXZ {
         let mut merged_strings = Vec::new();
         for tup in self.output.iter() {
             let strings: Vec<String> = match &tup.1 {
-                OutputExpression::ZLabel(s1, s2, s3) => {
-                    vec![s1.clone(), s2.to_string(), s3.clone()]
-                }
-                OutputExpression::ZLabelWithExpression(s1, s2, s3) => {
-                    vec![s1.clone(), s2.to_string(), s3.clone()]
-                }
-                OutputExpression::XLabel(s1, s2, s3) => {
-                    vec![s1.clone(), s2.to_string(), s3.clone()]
-                }
-                OutputExpression::XLabelWithExpression(s1, s2, s3) => {
-                    vec![s1.clone(), s2.to_string(), s3.clone()]
-                }
                 OutputExpression::GeneralLabel(s1) => {
                     vec![s1.clone()]
                 }
@@ -4071,42 +3957,6 @@ impl PlayerSimulationXZ {
                 }
                 OutputExpression::Text(s1) => {
                     vec![s1.clone()]
-                }
-                OutputExpression::ZInertiaMiss(s1, s2, s3, s4, s5) => {
-                    vec![
-                        s1.clone(),
-                        s2.clone(),
-                        s3.to_string(),
-                        s4.clone(),
-                        s5.clone(),
-                    ]
-                }
-                OutputExpression::ZInertiaHit(s1, s2, s3, s4, s5) => {
-                    vec![
-                        s1.clone(),
-                        s2.clone(),
-                        s3.to_string(),
-                        s4.clone(),
-                        s5.clone(),
-                    ]
-                }
-                OutputExpression::XInertiaHit(s1, s2, s3, s4, s5) => {
-                    vec![
-                        s1.clone(),
-                        s2.clone(),
-                        s3.to_string(),
-                        s4.clone(),
-                        s5.clone(),
-                    ]
-                }
-                OutputExpression::XInertiaMiss(s1, s2, s3, s4, s5) => {
-                    vec![
-                        s1.clone(),
-                        s2.clone(),
-                        s3.to_string(),
-                        s4.clone(),
-                        s5.clone(),
-                    ]
                 }
                 OutputExpression::GeneralInertiaLabel(s1, s2, s3, s4, s5, s6) => {
                     vec![

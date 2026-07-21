@@ -1,19 +1,16 @@
 use crate::expr_eval;
-use crate::functions::Argument::PositionalOnly;
 use crate::player::{PlayerSimulationXZ, Simulation};
-use std::any::Any;
-use std::collections::{HashMap, HashSet};
-use std::ops::Index;
+use std::collections::{HashMap};
 use crate::counter;
 use crate::errors;
 use crate::sort;
 use regex::Regex;
-use crate::functions::{self, ArgumentValue, FullArgumentValue, argument_from_data};
+use crate::functions::{self, ArgumentValue, argument_from_data};
 use indexmap::IndexMap;
 use pyo3::prelude::*;
 
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum Data {
     Float(f64),
     Int(i64),
@@ -70,7 +67,7 @@ impl Data {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub enum DataType {
     Float,
     Int,
@@ -520,7 +517,7 @@ pub fn parse(
     Ok(result)
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Tokenized {
     pub function: functions::Function,
     pub inputs: String,

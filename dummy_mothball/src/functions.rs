@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 
 use crate::{parser::{Data, DataType}, player::{MothballSequence, PlayerSimulationXZ}};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum FullArgumentValue {
     Float(f64),
     Int(i64),
@@ -19,13 +19,6 @@ pub fn empty_get_wrapped_f32(arg: Option<FullArgumentValue>) -> Option<f32> {
     }
 }
 
-pub fn empty_get_wrapped_i64(arg: Option<FullArgumentValue>) -> Option<i64> {
-    match arg {
-        Some(value) => value.empty_get_i64(),
-        None => None
-    }
-}
-
 pub fn empty_get_wrapped_i32(arg: Option<FullArgumentValue>) -> Option<i32> {
     match arg {
         Some(value) => value.empty_get_i32(),
@@ -33,43 +26,9 @@ pub fn empty_get_wrapped_i32(arg: Option<FullArgumentValue>) -> Option<i32> {
     }
 }
 
-pub fn empty_get_wrapped_bool(arg: Option<FullArgumentValue>) -> Option<bool> {
-    match arg {
-        Some(value) => value.empty_get_bool(),
-        None => None
-    }
-}
-
-pub fn empty_get_wrapped_str(arg: Option<FullArgumentValue>) -> Option<String> {
-    match arg {
-        Some(value) => value.empty_get_string(),
-        None => None
-    }
-}
-
-//pub fn empty_get_wrapped_sequence(arg: Option<FullArgumentValue>) -> Option<MothballSequence> {
-//    match arg {
-//        Some(value) => Some(MothballSequence(value.get_str().to_string())),
-//        None => None
-//    }
-//}
-
-pub fn empty_get_wrapped_f64(arg: Option<FullArgumentValue>) -> Option<f64> {
-    match arg {
-        Some(value) => Some(value.get_f64()),
-        None => None
-    }
-}
 pub fn get_wrapped_f32(arg: Option<FullArgumentValue>) -> Option<f32> {
     match arg {
         Some(value) => Some(value.get_f32()),
-        None => None
-    }
-}
-
-pub fn get_wrapped_i64(arg: Option<FullArgumentValue>) -> Option<i64> {
-    match arg {
-        Some(value) => Some(value.get_i64()),
         None => None
     }
 }
@@ -84,13 +43,6 @@ pub fn get_wrapped_i32(arg: Option<FullArgumentValue>) -> Option<i32> {
 pub fn get_wrapped_bool(arg: Option<FullArgumentValue>) -> Option<bool> {
     match arg {
         Some(value) => Some(value.get_bool()),
-        None => None
-    }
-}
-
-pub fn get_wrapped_str(arg: Option<FullArgumentValue>) -> Option<String> {
-    match arg {
-        Some(value) => Some(value.get_str().to_string()),
         None => None
     }
 }
@@ -118,17 +70,6 @@ impl FullArgumentValue {
             Self::Float(val) => *val as f32,
             Self::F32(val) => { println!("unexpected type but it was castable"); *val }
             Self::Int(_)
-            |Self::Bool(_)
-            |Self::Str(_)
-            |Self::None => panic!()
-        }
-    }
-
-    pub fn get_i64(&self) -> i64 {
-        match self {
-            Self::Int(val) => *val,
-            Self::Float(_)
-            |Self::F32(_)
             |Self::Bool(_)
             |Self::Str(_)
             |Self::None => panic!()
@@ -179,17 +120,6 @@ impl FullArgumentValue {
         }
     }
 
-    pub fn empty_get_i64(&self) -> Option<i64> {
-        match self {
-            Self::Int(val) => Some(*val),
-            Self::Float(_)
-            |Self::F32(_)
-            |Self::Bool(_)
-            |Self::Str(_) => panic!(),
-            Self::None => None
-        }
-    }
-
     pub fn empty_get_i32(&self) -> Option<i32> {
         match self {
             Self::Int(val) => Some(*val as i32),
@@ -200,42 +130,9 @@ impl FullArgumentValue {
             Self::None => None
         }
     }
-
-    pub fn empty_get_bool(&self) -> Option<bool> {
-        match self {
-            Self::Bool(val) => Some(*val),
-            Self::Int(_)
-            |Self::F32(_)
-            |Self::Float(_)
-            |Self::Str(_) => panic!(),
-            Self::None => None
-        }
-    }
-
-    pub fn empty_get_str(&self) -> Option<&str> {
-        match self {
-            Self::Str(val) => Some(val),
-            Self::Int(_)
-            |Self::F32(_)
-            |Self::Bool(_)
-            |Self::Float(_) => panic!(),
-            Self::None => None
-        }
-    }
-
-    pub fn empty_get_string(&self) -> Option<String> {
-        match self {
-            Self::Str(val) => Some(val.to_string()),
-            Self::Int(_)
-            |Self::F32(_)
-            |Self::Bool(_)
-            |Self::Float(_) => panic!(),
-            Self::None => None
-        }
-    }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum ArgumentValue {
     Empty(DataType),
     HasValue(DataType, FullArgumentValue),
@@ -257,7 +154,7 @@ impl ArgumentValue {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Argument {
     PositionalOnly(String, ArgumentValue, bool),
     PositionalOrKeyword(String, ArgumentValue, bool),
@@ -295,7 +192,7 @@ pub fn argument_from_data(data: Data) -> FullArgumentValue {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct FunctionData {
     pub id: i32,
     pub common_name: String,
@@ -309,7 +206,7 @@ impl FunctionData {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Function {
     Walk(FunctionData),
     Sprint(FunctionData),
@@ -425,17 +322,13 @@ pub enum Function {
 
 impl Function {
     pub fn run_func(&self, player: &mut PlayerSimulationXZ, args: Vec<FullArgumentValue>, kwargs: &mut IndexMap<String, FullArgumentValue>) {
-        println!("args: {:?}\n\nkwargs: {:?}", args, kwargs);
         let count_args = args.len();
         let mut reorganized_args: Vec<FullArgumentValue> = Vec::with_capacity(args.len() + kwargs.keys().len());
         let can_be_empty_by_default = vec!["rotation", "slip", "speed", "slow", "single_axis"];
 
         let function_args = self.data().arguments.iter();
         let passed_args = args.into_iter();
-        println!("all func args {:?}\n\n", function_args.clone().collect::<Vec<_>>());
         for (function_argument, passed_argument) in function_args.zip(passed_args) {
-            println!("func arg {:?}", function_argument);
-            println!("passed arg {:?}", passed_argument);
             match function_argument {
                 Argument::PositionalOnly(_, _, _) => { reorganized_args.push(passed_argument) }
                 Argument::PositionalOrKeyword(_, _, _) => reorganized_args.push(passed_argument),
@@ -445,11 +338,8 @@ impl Function {
         }
 
         let functions_args_excluding_positionals = self.data().arguments.iter().skip(count_args);
-        println!("args {:?}", reorganized_args);
-        println!("all func args {:?}\n\n", functions_args_excluding_positionals.clone().collect::<Vec<_>>());
 
         for missing_function_arg in functions_args_excluding_positionals {
-            println!("missing {:?}", missing_function_arg);
             let next_arg = kwargs.get(missing_function_arg.name());
             match next_arg {
                 Some(arg) => reorganized_args.push(arg.clone()),
@@ -464,7 +354,7 @@ impl Function {
             }
  //           reorganized_args.push(kwargs.swap_remove(missing_function_arg.name()).unwrap())
         }
-        println!("args {:?}", reorganized_args);
+
         let mut arguments = reorganized_args.into_iter();
         match self {
             Self::Walk(_) => player.walk(arguments.next().unwrap().get_i32(), empty_get_wrapped_f32(arguments.next()), empty_get_wrapped_f32(arguments.next()), empty_get_wrapped_i32(arguments.next()), empty_get_wrapped_i32(arguments.next())),
@@ -697,9 +587,9 @@ impl Function {
         }
     }
 
-    pub fn id(&self) -> i32 {
-        self.data().id
-    }
+//    pub fn id(&self) -> i32 {
+//        self.data().id
+//    }
 
     pub fn arguments(&self) -> &[Argument] {
         &self.data().arguments

@@ -57,7 +57,6 @@ def _tokenize(expression):
         raise SyntaxError("Unbalanced Parenthesis")
 
     
-    # print(r)
     return r
 
 
@@ -112,7 +111,7 @@ def _evaluate(tokens, variables):
                 raise ValueError(f"Unknown variable or function: {value}")
             
         elif kind == 'MINUS':
-            if (prevkind is None) or (prevkind in ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'POW', 'LPAREN']):
+            if (prevkind is None) or (prevkind in ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'POW', 'LPAREN', 'COMMA']):
                 # unary minus occurs at start or after another operator or after a left parenthesis;
                 while operators and operators[-1] in precedence and precedence[operators[-1]] >= precedence['UNARY_MINUS']:
                     operands = _apply_operator(operands, operators.pop())
@@ -172,7 +171,6 @@ def evaluate(expression, variables: dict=None):
 
     # print(expression)
     tokens = _tokenize(expression)
-    result=  _evaluate(tokens, variables)
 
     try:
         result=  _evaluate(tokens, variables)
@@ -182,8 +180,8 @@ def evaluate(expression, variables: dict=None):
     except Exception as e:
         raise SyntaxError(f"{e} in expression '{expression}'")
 
-# if __name__ == "__main__":
-    # print(evaluate("abs(-1)+2**(-max(1,4-8*p4x))", {'p4x':1/2}))
+if __name__ == "__main__":
+    print(evaluate("1 + 1*3**2 + abs(-1) + max(1,-abs(-3))"))
 
     # print(evaluate("0.1+0.2", {"p":3}))
 

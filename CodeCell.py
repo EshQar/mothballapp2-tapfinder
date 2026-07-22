@@ -132,12 +132,12 @@ class SimulationSection(Cell):
                 "xerror" : float("inf"),
                 "ztarget" : 0,
                 "zerror" : float("inf"),
-                "packages" : "",
+                "packages" : "std",
                 "corners" : "...",
                 "sortby" : "zmin",
                 "version" : "1.8",
-                "dp" : 6,
-                "slip" : "Not implemented",
+                "dp" : 4,
+                "slip" : "0.6",
             }
         else:
             self.tap_params = {"active" : False}

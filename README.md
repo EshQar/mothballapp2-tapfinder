@@ -58,7 +58,8 @@ The brute-forcer expects every available parameter to be given. If you want to l
 
 1.
     ### Slip
-    This has not yet been implemented!
+    The ground slip used when finding tap lengths. This also needs to be entered into the tap brute-forcer settings regardless of whether you've already written it in your mothball command. 
+
 
 ### Technical details
 | Parameter | Internal alias | Special Constraints | Default value
@@ -72,6 +73,9 @@ The brute-forcer expects every available parameter to be given. If you want to l
 | Corners | `corners` | none | `""` |
 | Sorting type | `sortby` | none | `xmin` |
 | Version | `version` | none | `1.8` |
+| slip | `slip` | none | `0.6` |
+> Parameters being parseable is not considered a special constraint, i.e. float parameters must be parseable as floats etc. This should be assumed for every parameter.
+
 
 ## Syntax guide
 

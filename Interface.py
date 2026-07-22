@@ -24,12 +24,13 @@ def mothball_fetch_XZ_as_tap(base_input_str, air, sim_params, ground):
 
     version = sim_params["version"]
     facing = sim_params["f"]
+    slip = sim_params["slip"]
 
     offset = []
     if sim_params["do_frange"]:
         start, end, step = float(sim_params["fstart"]), float(sim_params["fend"]), float(sim_params["fstep"])
 
-        input_str = f"pre(16) version(\"{version}\") sndel(false) "
+        input_str = f"pre(16) version(\"{version}\") sndel(false) slip({slip})"
         for facing in start + step * np.arange(math.ceil((end - start) / step) + 1):
             input_str += f"f({facing}) " + base_input_str + " outx outz outvx outvz"
             input_str += " || "
@@ -62,7 +63,7 @@ def mothball_fetch_XZ_as_tap(base_input_str, air, sim_params, ground):
             offset.append((x0, z0))
 
     else:
-        input_str = f"pre(16) version(\"{version}\") sndel(false) f({facing}) " + base_input_str + " outx outz outvx outvz"
+        input_str = f"pre(16) version(\"{version}\") sndel(false) slip({slip}) f({facing}) " + base_input_str + " outx outz outvx outvz"
         data = mothball_d(input_str, False, {}, False)
 
         z = [float(value) for name, _, value in data if name == "outz"][-1]

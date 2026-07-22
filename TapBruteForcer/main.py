@@ -4,10 +4,10 @@ from TapBruteForcer.tap import TapStrat
 from TapBruteForcer.parser import xz_get_goals, single_axis_get_goals
 import TapBruteForcer.helper as helper
 import math
-from time import time
+from time import perf_counter
 
 def find_tap_strats(params):
-    full_start = time()
+    full_start = perf_counter()
     for key in params.keys():
         if params[key] == "...":
             params[key] = None
@@ -26,9 +26,11 @@ def find_tap_strats(params):
 
     do_frange = params["do_frange"]
 
-    fstart, fend, fstep, fsteps = float(params["fstart"]), float(params["fend"]), float(params["fstep"]), int(params["fsteps"])
     if do_frange:
+        fstart, fend, fstep, fsteps = float(params["fstart"]), float(params["fend"]), float(params["fstep"]), int(params["fsteps"])
         assert fstart < fend, "fstart < fend wasn't satisfied!"
+    else:
+        fstart, fend, fstep, fsteps = None, None, None, None
 
     max_counts, pools, pools_offset, is_reversible = packer(packing_cmd, params)
 
@@ -101,9 +103,9 @@ def find_tap_strats(params):
     assert all((count >= 0) for count in max_counts), "Invalid max_counts or is_reversible"
     assert sum(max_counts) >= n, "The sum of max counts cannot be less than n"
     try:
-        inner_start = time()
+        inner_start = perf_counter()
         strats = brute_force(n, max_counts, pools_offset, is_reversible, goals, axis, fstart, fstep, fsteps)
-        inner_end = time()
+        inner_end = perf_counter()
         print(f"Brute force took time {inner_end - inner_start}s")
     except BaseException as e:
         raise RuntimeError(f"The brute-forcer encountered an error: {e}")
@@ -141,7 +143,7 @@ def find_tap_strats(params):
         return output
 
     tap_strats.sort(key=sort_key)
-    full_end = time()
+    full_end = perf_counter()
     print(f"Overhead was {full_end - full_start - (inner_end - inner_start)}s")
     print(f"Full internal run took time {full_end - full_start}s")
     return list(map(lambda strat: (8, (printer(strat),)), tap_strats))

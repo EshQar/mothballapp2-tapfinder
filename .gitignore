@@ -17,6 +17,7 @@ output.txt
 benchmark.py
 new_code.txt
 profile.json.gz
+profile.kernel.etl
 /target/
 
 # PyInstaller output

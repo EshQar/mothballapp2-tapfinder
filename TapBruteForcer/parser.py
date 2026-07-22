@@ -108,6 +108,7 @@ def get_new_params(curr_params, curr_text, strict=True):
                 found_params.add("fstart")
                 found_params.add("fstep")
             else:
+                params["fstart"], params["fend"], params["fstep"], params["fsteps"] = "...", "...", "...", "..."
                 params["do_frange"] = False
 
     if strict:

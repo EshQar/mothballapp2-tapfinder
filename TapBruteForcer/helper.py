@@ -354,8 +354,8 @@ def find_nth(haystack: str, needle: str, n: int) -> int:
 
 def get_zero_offset(params):
     do_frange = params["do_frange"]
-    fstart, fend, fsteps = float(params["fstart"]), float(params["fend"]), int(params["fsteps"])
     if do_frange:
+        fstart, fend, fsteps = float(params["fstart"]), float(params["fend"]), int(params["fsteps"])
         assert fstart < fend
 
     match params["axis"]:

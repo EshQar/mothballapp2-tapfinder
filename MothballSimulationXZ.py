@@ -2,6 +2,7 @@ from math import sin, cos, atan2 as arctan, sqrt, copysign, degrees as deg, asin
 from numpy import float32 as f32, uint64 as u64, int32 as i32
 from typing import Literal
 from BaseMothballSimulation import BasePlayer, MothballSequence
+from BaseMothballSimulation import NameString
 from Enums import ExpressionType
 from collections import deque
 
@@ -1481,16 +1482,393 @@ class PlayerSimulationXZ(BasePlayer):
 
 
 
-if __name__ == "__main__":
+
+if __name__ == "__main__": # script to generate the rust code automatically instead of manually writing the args and shit
+    import inspect
+
+    def argument_info(func):
+        mapping = {
+            inspect.Parameter.POSITIONAL_ONLY: "POSITIONAL_ONLY",
+            inspect.Parameter.POSITIONAL_OR_KEYWORD: "POSITIONAL_OR_KEYWORD",
+            inspect.Parameter.KEYWORD_ONLY: "KEYWORD_ONLY",
+            inspect.Parameter.VAR_POSITIONAL: "VAR_POSITIONAL",
+        }
+
+        result = []
+        for param in inspect.signature(func).parameters.values():
+            if param.kind not in mapping:
+                continue
+
+            annotation = (
+                None
+                if param.annotation is inspect.Parameter.empty
+                else param.annotation
+            )
+
+            if param.default is inspect.Parameter.empty:
+                result.append((mapping[param.kind], param.name, annotation))
+            else:
+                result.append((mapping[param.kind], param.name, annotation, param.default))
+
+        return result
+    
+    FUNCTION_ENUMS = {
+        "repeat" : "Repeat",
+        "r" : "Repeat",
+        "print" : "Print",
+        "var" : "Var",
+        "setprecision" : "SetPrecision",
+        "precision" : "SetPrecision",
+        "pre" : "SetPrecision",
+        "ballhelp" : "BallHelp",
+        "help" : "BallHelp",
+
+        "w": "Walk",
+        "walk": "Walk",
+
+        "sprint": "Sprint",
+        "s": "Sprint",
+
+        "walkair": "WalkAir",
+        "wa": "WalkAir",
+
+        "sprintair": "SprintAir",
+        "sa": "SprintAir",
+
+        "walkjump": "WalkJump",
+        "wj": "WalkJump",
+
+        "sprintjump": "SprintJump",
+        "sj": "SprintJump",
+
+        "sneak": "Sneak",
+        "sn": "Sneak",
+
+        "sneakair": "SneakAir",
+        "sna": "SneakAir",
+
+        "sneakjump": "SneakJump",
+        "snj": "SneakJump",
+
+        "sneaksprint": "SneakSprint",
+        "sns": "SneakSprint",
+
+        "sneaksprintair": "SneakSprintAir",
+        "snsa": "SneakSprintAir",
+
+        "sneaksprintjump": "SneakSprintJump",
+        "snsj": "SneakSprintJump",
+
+        "sprintstrafejump": "SprintStrafeJump",
+        "strafejump": "SprintStrafeJump",
+        "stfj": "SprintStrafeJump",
+
+        "stopground": "Stop",
+        "stop": "Stop",
+        "st": "Stop",
+
+        "stopair": "StopAir",
+        "sta": "StopAir",
+
+        "stopjump": "StopJump",
+        "stj": "StopJump",
+
+        "sneakstop": "SneakStop",
+        "snst": "SneakStop",
+
+        "sneakstopair": "SneakStopAir",
+        "snsta": "SneakStopAir",
+
+        "sneakstopjump": "SneakStopJump",
+        "snstj": "SneakStopJump",
+
+        "walkpessi": "WalkPessi",
+        "wp": "WalkPessi",
+
+        "sprintpessi": "SprintPessi",
+        "sp": "SprintPessi",
+
+        "forcemomentum": "ForceMomentum",
+        "fmm": "ForceMomentum",
+
+        "walk45": "Walk45",
+        "w45": "Walk45",
+
+        "sprint45": "Sprint45",
+        "s45": "Sprint45",
+
+        "walkair45": "WalkAir45",
+        "wa45": "WalkAir45",
+
+        "sprintair45": "SprintAir45",
+        "sa45": "SprintAir45",
+
+        "walkjump45": "WalkJump45",
+        "wj45": "WalkJump45",
+
+        "sprintjump45": "SprintJump45",
+        "sj45": "SprintJump45",
+
+        "sneak45": "Sneak45",
+        "sn45": "Sneak45",
+
+        "sneakair45": "SneakAir45",
+        "sna45": "SneakAir45",
+
+        "sneakjump45": "SneakJump45",
+        "snj45": "SneakJump45",
+
+        "sprintstrafejump45": "SprintStrafeJump45",
+        "strafejump45": "SprintStrafeJump45",
+        "stfj45": "SprintStrafeJump45",
+
+        "sneaksprint45": "SneakSprint45",
+        "sns45": "SneakSprint45",
+
+        "sneaksprintair45": "SneakSprintAir45",
+        "snsa45": "SneakSprintAir45",
+
+        "sneaksprintjump45": "SneakSprintJump45",
+        "snsj45": "SneakSprintJump45",
+
+        "walkpessi45": "WalkPessi45",
+        "wp45": "WalkPessi45",
+
+        "sprintpessi45": "SprintPessi45",
+        "sp45": "SprintPessi45",
+
+        "forcemomentum45": "ForceMomentum45",
+        "fmm45": "ForceMomentum45",
+
+        "outz": "OutZ",
+        "zmm": "Zmm",
+        "zb": "Zb",
+        "outvz": "OutVz",
+
+        "outx": "OutX",
+        "xmm": "Xmm",
+        "xb": "Xb",
+        "outvx": "OutVx",
+
+        "vec": "Vec",
+
+        "outangle": "OutAngle",
+        "outa": "OutAngle",
+        "outfacing": "OutAngle",
+        "outf": "OutAngle",
+
+        "outturn": "OutTurn",
+        "outt": "OutTurn",
+
+        "effectsmultiplier": "EffectsMultiplier",
+        "effects": "EffectsMultiplier",
+
+        "angleinfo": "AngleInfo",
+        "ai": "AngleInfo",
+
+        "f": "Face",
+        "face": "Face",
+        "facing": "Face",
+
+        "turn": "Turn",
+
+        "setposz": "SetPosZ",
+        "z": "SetPosZ",
+
+        "setvz": "SetVz",
+        "vz": "SetVz",
+
+        "setposx": "SetPosX",
+        "x": "SetPosX",
+
+        "setvx": "SetVx",
+        "vx": "SetVx",
+
+        "addvx": "AddVx",
+        "addvz": "AddVz",
+
+        "addx": "AddPosX",
+        "addposx": "AddPosX",
+
+        "addz": "AddPosZ",
+        "addposz": "AddPosZ",
+
+        "setslip": "SetSlip",
+        "slip": "SetSlip",
+
+        "inertia": "Inertia",
+
+        "sprintairdelay": "SprintAirDelay",
+        "sdel": "SprintAirDelay",
+
+        "sneakdelay": "SneakDelay",
+        "sndel": "SneakDelay",
+
+        "singleaxisinertia": "SingleAxisInertia",
+        "sai": "SingleAxisInertia",
+
+        "version": "Version",
+        "v": "Version",
+
+        "speed": "Speed",
+
+        "slowness": "Slowness",
+        "slow": "Slowness",
+
+        "anglequeue": "AngleQueue",
+        "aq": "AngleQueue",
+
+        "turnqueue": "TurnQueue",
+        "tq": "TurnQueue",
+
+        "possibilities": "Possibilities",
+        "poss": "Possibilities",
+
+        "xpossibilities": "XPossibilities",
+        "xposs": "XPossibilities",
+
+        "xzpossibilities": "XZPossibilities",
+        "xzposs": "XZPossibilities",
+
+        "dimensions": "Dimensions",
+        "dim": "Dimensions",
+
+        "taps": "Taps",
+
+        "bwmm": "Bwmm",
+        "xbwmm": "XBwmm",
+
+        "wall": "Wall",
+        "inv": "Wall",
+
+        "xwall": "XWall",
+        "xinv": "XWall",
+
+        "blocks": "Blocks",
+        "xblocks": "XBlocks",
+
+        "inertialistener": "InertiaListener",
+        "il": "InertiaListener",
+        "xzinertialistener": "InertiaListener",
+        "xzil": "InertiaListener",
+
+        "xinertialistener": "XInertiaListener",
+        "xil": "XInertiaListener",
+
+        "zinertialistener": "ZInertiaListener",
+        "zil": "ZInertiaListener",
+
+        "macro": "Macro",
+    }
+
     a = PlayerSimulationXZ()
-    # s = "print(A pixel is {px} blocks\, and 8 pixels is {8*px} blocks)"
-    # s = 'f(-13.875) wa.a(6) x(0) xil(wj.a wa.d(8) wa.sd(2) wa.s) outx x(0) w.s outz z(0) zil( wj.sd wa.d(2) sa.wd(9)) outz s.wd outz xmm vec | aq(-16.255, -38.185, -62.88, -76.93, -84.985, -90) xil(sj sa45(5) zmm outx sa45(7)) outx'
-    # s = 'angleinfo(-45.01)'
-    # s = 'pre(16) r(s[ss] outvz,3) r(st[ss] outvz, 3)'
-    # s = 'w.s[wt](5) var(spd, outz outvz(-0.0615)) | z(-spd) sj sa45[wt] sa45(9) sa45[wt](2) sj45(12) outz(6, offset)'
-    a.simulate('bwmm(1, sj45(12))')
+    funcs = a.FUNCTIONS
+    keys = set()
+    values = set()
+    del funcs["function"]
+    del funcs["func"]
+    for key, value in zip(funcs.keys(), funcs.values()):
+        keys.add(key)
+        values.add(value)
+    strings = []
+    id = 0
+    for value in values:
+        keys_to_value = []
+        for key in keys:
+            if funcs[key] == value:
+                keys_to_value.append(key)
 
-    print(a.history)
+        keys_to_value.sort(key=len, reverse=True)
+        keys_to_value_names = list(f"\"{key}\"" for key in keys_to_value)
+        name = keys_to_value[0]
+        id += 1
 
+        arguments = argument_info(value)
+        argument_strings = []
+        for argument in arguments:
+            arg_name = argument[1]
+            if arg_name == 'self':
+                continue
+            if argument[0] == "POSITIONAL_ONLY":
+                kind = "PositionalOnly"
+            elif argument[0] == "POSITIONAL_OR_KEYWORD":
+                kind = "PositionalOrKeyword"
+            elif argument[0] == "KEYWORD_ONLY":
+                kind = "KeywordOnly"
+            elif argument[0] == "VAR_POSITIONAL":
+                kind = "VarPositional"
+            else:
+                raise ValueError
+            is_required = "Oh noey somehting oopsied"
+            arg_type = "FOISDNFOSNBFIUESBF THERE WAS A PROBLEM"
+            type_map = {float : "Float", f32 : "F32", bool : "Bool", int : "Int", str : "Str", MothballSequence : "Str"}
+            if len(argument) == 4:
+                is_required = False
+                if argument[3] is None:
+                    arg_type = type_map[argument[2]]
+                    arg_val = f""
+                elif argument[2] == float:
+                    arg_type = "Float"
+                    if "." in str(argument[3]):
+                        suffix = "f64"
+                    else:
+                        suffix = ".0f64"
+                    arg_val = f"FullArgumentValue::Float({argument[3]}{suffix})"
+                elif argument[2] == int:
+                    arg_type = "Int"
+                    arg_val = f"FullArgumentValue::Int({argument[3]})"
+                elif argument[2] == str:
+                    arg_type = "Str"
+                    arg_val = f"FullArgumentValue::Str(\"{argument[3]}\".to_string())"
+                elif argument[2] == MothballSequence:
+                    arg_type = "MothballSequence"
+                    arg_val = f"FullArgumentValue::Str(\"{argument[3]}\".to_string())"
+                elif argument[2] == NameString:
+                    arg_type = "NameString"
+                    arg_val = f"FullArgumentValue::Str(\"{argument[3]}\".to_string())"
+                elif argument[2] == bool:
+                    arg_type = "Bool"
+                    arg_val = f"FullArgumentValue::Bool({argument[3].lower()})"
+                elif argument[2] == f32:
+                    arg_type = "F32"
+                    suffix = ""
+                    if "." in str(argument[3]):
+                        suffix = "f32"
+                    else:
+                        suffix = ".0f32"
+                    arg_val = f"FullArgumentValue::F32({argument[3]}{suffix})"
+                else:
+                    raise ValueError(f"{type(argument[2]).__name__}")
+                if argument[3] is None:
+                    argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}), {str(is_required).lower()})")
+                else:
+                    argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::HasValue(DataType::{arg_type}, {arg_val}), {str(is_required).lower()})")
+            else:
+                is_required = True
+                if argument[2] == float:
+                    arg_type = "Float"
+                elif argument[2] == int:
+                    arg_type = "Int"
+                elif argument[2] == str: 
+                    arg_type = "Str"
+                elif argument[2] == MothballSequence:
+                    arg_type = "MothballSequence"
+                elif argument[2] == NameString:
+                    arg_type = "NameString"
+                elif argument[2] == bool:
+                    arg_type = "Bool"
+                elif argument[2] == f32:
+                    arg_type = "F32"
+                elif argument[2] is None:
+                    print(argument)
+                    arg_type = "OH NO SOMETHING IS WRONG"
+                else:
+                    print("thing", argument[2])
+                    raise ValueError(f"{argument[2].__name__}")
 
-    a.show_output()
+                argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}), {str(is_required).lower()})")
+
+        strings.append("\n\t\t" + f"funcs.push(({id}, Function::{FUNCTION_ENUMS[keys_to_value[0]]}(FunctionData::new({id}, \"{name}\".to_string(), vec![{'.to_string(), '.join(keys_to_value_names)}.to_string()], vec![{', '.join(argument_strings)}]))));")
+    
+    print(f"{''.join(strings)}")
+    print("\n\n")

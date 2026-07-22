@@ -62,6 +62,13 @@ jobs:
         pip install dist/*.whl
       shell: bash
 
+    - name: Build dummy_mothball PyO3 module
+      run: |
+        cd dummy_mothball
+        maturin build --release --out dist
+        pip install dist/*.whl
+      shell: bash
+
     - name: Verify brute_forcer installation
       run: |
         python -c "import brute_forcer; print(brute_forcer.__file__); print(dir(brute_forcer))"
@@ -70,7 +77,7 @@ jobs:
     - name: Build app with PyInstaller
       run: |
         pip install pyinstaller
-        pyinstaller --onefile ${{ matrix.add_data }} --collect-all brute_forcer --i "${{ matrix.icon }}" Mothball.py
+        pyinstaller --onefile ${{ matrix.add_data }} --collect-all brute_forcer --collect-all dummy_mothball --i "${{ matrix.icon }}" Mothball.py
       shell: bash
 
     - name: Upload executable

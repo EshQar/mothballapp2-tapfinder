@@ -8,8 +8,10 @@ This is a tap brute-forcer integrated into the mothball app by anonnoob. It also
 >
 >Loading files that were made with earlier versions can be made impossible by some updates
 >
->Probably something else so if you suspect you got a bogus output of some kind do notify me! @EshQar on discord
+>The float precision isn't perfect. I haven't properly tested, but I think it should mostly be e-6 precise and probably e-7 as well, but double check your results when dealing with this kind of precision.
 >
+>Probably something else so if you suspect you got a bogus output of some kind do notify me! @EshQar on discord
+
 
 # Overview of brute-forcing parameters and functionality
 

@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 
 use crate::{parser::{Data, DataType}, player::{MothballSequence, PlayerSimulationXZ}};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum FullArgumentValue {
     Float(f64),
     Int(i64),
@@ -67,8 +67,8 @@ impl FullArgumentValue {
     }
     pub fn get_f32(&self) -> f32 {
         match self {
-            Self::Float(val) => *val as f32,
-            Self::F32(val) => { println!("unexpected type but it was castable"); *val }
+            Self::F32(val) => *val,
+            Self::Float(val) => { println!("unexpected type but it was castable"); *val as f32}
             Self::Int(_)
             |Self::Bool(_)
             |Self::Str(_)
@@ -111,8 +111,8 @@ impl FullArgumentValue {
 
     pub fn empty_get_f32(&self) -> Option<f32> {
         match self {
-            Self::Float(val) => Some(*val as f32),
-            Self::F32(val) => { println!("unexpected type but it was castable"); Some(*val) }
+            Self::F32(val) => Some(*val),
+            Self::Float(val) => { println!("unexpected type but it was castable"); Some(*val as f32) }
             Self::Int(_)
             |Self::Bool(_)
             |Self::Str(_) => panic!(),
@@ -132,7 +132,7 @@ impl FullArgumentValue {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ArgumentValue {
     Empty(DataType),
     HasValue(DataType, FullArgumentValue),
@@ -154,7 +154,7 @@ impl ArgumentValue {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Argument {
     PositionalOnly(String, ArgumentValue, bool),
     PositionalOrKeyword(String, ArgumentValue, bool),
@@ -192,7 +192,7 @@ pub fn argument_from_data(data: Data) -> FullArgumentValue {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FunctionData {
     pub id: i32,
     pub common_name: String,
@@ -206,7 +206,7 @@ impl FunctionData {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Function {
     Walk(FunctionData),
     Sprint(FunctionData),
@@ -397,18 +397,18 @@ impl Function {
             Self::SprintPessi45(_) => player.sprintpessi45(arguments.next().unwrap().get_i32(), arguments.next().unwrap().get_i32(), empty_get_wrapped_f32(arguments.next()), empty_get_wrapped_f32(arguments.next())),
             Self::ForceMomentum45(_) => player.forcemomentum45(arguments.next().unwrap().get_i32(), arguments.next().unwrap().get_i32(), empty_get_wrapped_f32(arguments.next()), empty_get_wrapped_f32(arguments.next()), empty_get_wrapped_i32(arguments.next()), empty_get_wrapped_i32(arguments.next())),
 
-            Self::OutZ(_) => player.outz( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::Zmm(_) => player.zmm( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::Zb(_) => player.zb( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::OutVz(_) => player.outvz( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::OutX(_) => player.outx( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::Xmm(_) => player.xmm( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::Xb(_) => player.xb( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::OutVx(_) => player.outvx( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
+            Self::OutZ(_) => player.outz( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::Zmm(_) => player.zmm( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::Zb(_) => player.zb( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::OutVz(_) => player.outvz( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::OutX(_) => player.outx( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::Xmm(_) => player.xmm( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::Xb(_) => player.xb( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::OutVx(_) => player.outvx( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
             Self::Vec(_) => player.vec(),
 
-            Self::OutAngle(_) => player.outangle( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
-            Self::OutTurn(_) => player.outturn( arguments.next().unwrap().get_f32(), arguments.next().unwrap().get_str()),
+            Self::OutAngle(_) => player.outangle( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
+            Self::OutTurn(_) => player.outturn( arguments.next().unwrap().get_f64(), arguments.next().unwrap().get_str()),
             Self::EffectsMultiplier(_) => player.effectsmultiplier(get_wrapped_i32(arguments.next()), get_wrapped_i32(arguments.next())),
             Self::AngleInfo(_) => player.angleinfo(arguments.next().unwrap().get_f32()),
 
@@ -472,7 +472,7 @@ impl Function {
         }
     }
 
-    fn data(&self) -> &FunctionData {
+    pub fn data(&self) -> &FunctionData {
         match self {
             Self::Walk(data)
             | Self::Sprint(data)

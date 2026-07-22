@@ -1,4 +1,5 @@
 use pyo3::prelude::*;
+use pyo3;
 mod expr_eval;
 mod player;
 mod math;
@@ -12,7 +13,7 @@ mod args;
 /// A Python module implemented in Rust.
 #[pymodule]
 mod dummy_mothball {
-
+    use pyo3;
     use std::collections::HashMap;
     use indexmap::IndexMap;
 
@@ -23,14 +24,13 @@ mod dummy_mothball {
         map.into_iter().collect()
     }
 
-    use crate::{expr_eval::evaluate, player::PlayerSimulationXZ};
+    use crate::{player::PlayerSimulationXZ};
     use pyo3::prelude::*;
     use crate::player;
     use crate::parser;
-
     /// Erm
     #[pyfunction]
-    fn mothball(sequence: String, return_defaults: bool, locals: Option<HashMap<String, parser::Data>>, suppress_exception: bool) -> String {
+    fn mothball(sequence: String, return_defaults: bool, locals: Option<HashMap<String, parser::Data>>, suppress_exception: bool) -> Vec<Vec<String>> {
         let index_locals = match locals {
             Some(hashmap) => { Some(hashmap_to_indexmap(hashmap)) }
             None => None,
@@ -38,6 +38,6 @@ mod dummy_mothball {
 
         let mut sim_player: PlayerSimulationXZ = player::PlayerSimulationXZ::new();
         sim_player.simulate(sequence, return_defaults, index_locals, suppress_exception);
-        sim_player.show_output()
+        return sim_player.return_output()
     }
 }

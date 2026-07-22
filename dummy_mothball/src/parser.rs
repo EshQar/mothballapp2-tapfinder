@@ -8,9 +8,10 @@ use regex::Regex;
 use crate::functions::{self, ArgumentValue, argument_from_data};
 use indexmap::IndexMap;
 use pyo3::prelude::*;
+use once_cell::sync::Lazy;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Data {
     Float(f64),
     Int(i64),
@@ -67,13 +68,15 @@ impl Data {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum DataType {
     Float,
     Int,
     F32,
     Bool,
     Str,
+    MothballSequence,
+    NameString,
 }
 
 impl DataType {
@@ -102,6 +105,14 @@ impl DataType {
             DataType::Str => {
                 panic!("Cant do that!");
             }
+
+            DataType::MothballSequence => {
+                panic!("Cant do that!");
+            }
+
+            DataType::NameString => {
+                panic!("Cant do that!");
+            }
         }
     }
 }
@@ -116,7 +127,6 @@ pub fn safe_eval(
         Evaluate and convert expr to datatype.
         If datatype = str, returns expr as normal.
     */
-
     if matches!(datatype, DataType::Float)
         || matches!(datatype, DataType::Int)
         || matches!(datatype, DataType::F32)
@@ -126,7 +136,7 @@ pub fn safe_eval(
             if expr.trim().to_lowercase() == "true" {
                 return Ok(Data::Bool(true));
             } else if expr.trim().to_lowercase() == "false" {
-                return Ok(Data::Bool(true));
+                return Ok(Data::Bool(false));
             } else {
                 panic!("idk what to do here");
             }
@@ -404,17 +414,8 @@ pub fn parse(
     let mut follows_slash = false;
     let mut in_string = false;
 
-    // Regex to change '||' into 'x(0) z(0) vx(0) vz(0)'
-    let replace_double_bar_regex = Regex::new(r"(\|\|)").unwrap();
-    string = replace_double_bar_regex
-        .replace_all(&string, " x(0) z(0) vx(0) vz(0) ")
-        .to_string();
-
-    // Regex to change '|' into 'x(0) z(0)'
-    let replace_bar_regex = Regex::new(r"(\|)").unwrap();
-    string = replace_bar_regex
-        .replace_all(&string, " x(0) z(0) ")
-        .to_string();
+    string = string.replace(" || ", " x(0) z(0) vx(0) vz(0) ");
+    string = string.replace(" | ", " x(0) z(0) ");
 
     let mut chars: Vec<char> = string.chars().collect();
     chars.push(splitters[0]);
@@ -526,6 +527,16 @@ pub struct Tokenized {
     pub kwargs: IndexMap<String, functions::FullArgumentValue>
 }
 
+static TOKENIZE_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(
+        r"(\W)?([^.\[\(\-\)\]]+)(?:\.([wasdWASD]+))?(?:\[(.*)\])?(?:\((.*)\))?(.+)?"
+    ).unwrap()
+});
+
+static KEYWORD_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^\s*?(\w+)\s*=\s*(.+)\s*$").unwrap()
+});
+
 pub fn tokenize(
     player: &mut PlayerSimulationXZ,
     string: &str,
@@ -557,27 +568,11 @@ pub fn tokenize(
     or non-movement functions) receives an input.
     Raises any other error encountered while converting datatypes.
     */
-
-    // tokenize_regex = r'(\W)?([^.\(\-)]+)(?:\.([^\(\.]+))?(?:\[(.*)\])?(?:\((.*)\))?(.+)?'
-
-    let e1 = r"(\W)?";
-    let func = r"([^.\[\(\-\)\]]+)";
-    let inputs = r"(?:\.([wasdWASD]+))?";
-    let modifiers = r"(?:\[(.*)\])?";
-    let args = r"(?:\((.*)\))?";
-    let e2 = r"(.+)?";
-
-    let tokenize_regex = format!(
-        "{}{}{}{}{}{}",
-        e1, func, inputs, modifiers, args, e2
-    );
-
-    let regex = Regex::new(&tokenize_regex).unwrap();
-    let captures = regex.captures(string).unwrap();
+    let captures = TOKENIZE_REGEX.captures(string).unwrap();
 
     let error1 = captures.get(1).map_or("", |m| m.as_str());
     let func_name = captures.get(2).map_or("", |m| m.as_str());
-    let mut inputs = captures.get(3).map_or("", |m| m.as_str()).to_string();
+    let mut inputs = captures.get(3).map_or("", |m| m.as_str());
     let modifiers = captures.get(4).map_or("", |m| m.as_str());
     let args = captures.get(5).map_or("", |m| m.as_str());
     let error2 = captures.get(6).map_or("", |m| m.as_str());
@@ -628,11 +623,10 @@ pub fn tokenize(
 
     let args = parse(player.call_stack.clone(), args, vec![','], false)?;
 
-    let keyword_regex = Regex::new(r"^\s*?(\w+)\s*=\s*(.+)\s*$").unwrap();
     let mut after_keyword = false;
 
     for arg in args {
-        let result = keyword_regex.captures(&arg);
+        let result = KEYWORD_REGEX.captures(&arg);
 
         if let Some(result) = result {
             // keyword
@@ -685,14 +679,14 @@ pub fn tokenize(
 
         if Simulation::FORTYFIVE_METHODS.contains(&func.name())
         {
-            inputs = "w".to_string();
+            inputs = "w";
         }
     } else if inputs.is_empty() {
-        inputs = "w".to_string();
+        inputs = "w";
     } else if ![
         "w", "wa", "wd", "s", "sa", "sd", "a", "d",
     ]
-    .contains(&inputs.as_str())
+    .contains(&inputs)
     {
         return Err(errors::RuntimeError::ValueError(format!(
             "function {} received bad input '{}', it can only be w, s, a, d, wa, wd, sa, wd.",
@@ -710,7 +704,7 @@ pub fn tokenize(
 
     Ok(Tokenized {
         function: func.clone(),
-        inputs,
+        inputs: inputs.to_string(),
         modifiers,
         args: positional_args,
         kwargs: keyword_args,

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use regex::Regex;
 use indexmap::IndexMap;
 use crate::parser::Data;
+use once_cell::sync::Lazy;
 
 #[derive(Clone)]
 enum TokenKind {
@@ -117,42 +118,46 @@ impl fmt::Display for TokenKind {
     }
 }
 
-fn _tokenize(expression: &str) -> Vec<Token> {
-    let token_specification: Vec<(&'static str, &'static str)> = vec![
-        ("NUMBER", r"\d+(\.\d+)?[eE]-\d+|\d+(\.\d+)?[eE]\d+|\d+\.\d+|\d+\.|\.\d+|\d+"),
-        ("PLUS", r"\+"),
-        ("MINUS", r"-"),
-        ("POW", r"\*\*"),
-        ("TIMES", r"\*"),
-        ("DIVIDE", r"/"),
-        ("LPAREN", r"\("),
-        ("RPAREN", r"\)"),
-        ("ID", r"[A-Za-z_][A-Za-z_0-9]*"),
-        ("WHITESPACE", r"\s+"),
-        ("COMMA", r","),
-        ("MISMATCH", r"."),
-    ];
+static TOKEN_SPECIFICATION: &[(&str, &str)] = &[
+    ("NUMBER", r"\d+(\.\d+)?[eE]-\d+|\d+(\.\d+)?[eE]\d+|\d+\.\d+|\d+\.|\.\d+|\d+"),
+    ("PLUS", r"\+"),
+    ("MINUS", r"-"),
+    ("POW", r"\*\*"),
+    ("TIMES", r"\*"),
+    ("DIVIDE", r"/"),
+    ("LPAREN", r"\("),
+    ("RPAREN", r"\)"),
+    ("ID", r"[A-Za-z_][A-Za-z_0-9]*"),
+    ("WHITESPACE", r"\s+"),
+    ("COMMA", r","),
+    ("MISMATCH", r"."),
+];
 
-    let tok_regex = token_specification
+static TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
+    let tok_regex = TOKEN_SPECIFICATION
         .iter()
         .map(|(token_type, pattern)| format!("(?P<{}>{})", token_type, pattern))
         .collect::<Vec<_>>()
         .join("|");
 
-    let regex = Regex::new(&tok_regex).unwrap();
+    Regex::new(
+        &tok_regex
+    ).unwrap()
+});
 
+fn _tokenize(expression: &str) -> Vec<Token> {
     let mut r = Vec::new();
     let mut nest = 0;
 
     let mut prevkind: Option<String> = None;
 
-    for caps in regex.captures_iter(expression) {
+    for caps in TOKEN_REGEX.captures_iter(expression) {
         let match_object = caps.get(0).unwrap();
         let value: &str = match_object.as_str();
 
         let mut kind = "";
 
-        for (name, _) in &token_specification {
+        for (name, _) in TOKEN_SPECIFICATION {
             if caps.name(name).is_some() {
                 kind = name;
                 break;
@@ -217,18 +222,13 @@ fn _tokenize(expression: &str) -> Vec<Token> {
 
 
 fn _apply_operator(operands: &mut Vec<f64>, operator: Operator) {
-    println!("applying operator");
-    println!("inside: operands: {:?}", operands);
-    println!("inside: operator: {}", operator);
     if matches!(operator, Operator::UnaryMinus)  {
-        println!("unary minus");
         if operands.is_empty() {
             panic!("Invalid expression");
         }
 
         let a = operands.pop().unwrap();
         operands.push(-a);
-        println!("inside afterwards: operands: {:?}", operands);
     }
 
     if operands.len() <= 1 {
@@ -239,19 +239,14 @@ fn _apply_operator(operands: &mut Vec<f64>, operator: Operator) {
     let a = operands.pop().unwrap();
 
     if matches!(operator, Operator::Plus) {
-        println!("plus");
         operands.push(a + b);
     } else if matches!(operator, Operator::Minus) {
-        println!("minus");
         operands.push(a - b);
     } else if matches!(operator, Operator::Times) {
-        println!("times");
         operands.push(a * b);
     } else if matches!(operator, Operator::Divide) {
-        println!("divide");
         operands.push(a / b);
     } else if matches!(operator, Operator::Pow) {
-        println!("pow");
         operands.push(a.powf(b));
     }
 }
@@ -312,7 +307,6 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
 
     for token in tokens {
         let kind = token.kind();
-        println!("token: {} with curr operators {:?}, and curr operands {:?}", token, operators, operands);
         match token {
             Number(float) => {
                 operands.push(float)
@@ -330,8 +324,6 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
             }
 
             Minus => {
-                println!("minus");
-                println!("{}", prevkind.clone().unwrap());
                 if prevkind.is_none()
                     || matches!(
                         prevkind,
@@ -344,7 +336,6 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
                             | Some(TokenKind::Comma)
                     )
                 {
-                    println!("minus is unary");
                     // unary minus occurs at start or after another operator or after a left parenthesis;
                     while !operators.is_empty()
                         && precedence.contains_key(operators.last().unwrap())
@@ -352,9 +343,18 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
                     {
                         _apply_operator(&mut operands, operators.pop().unwrap());
                     }
-
                     operators.push(Operator::UnaryMinus); 
-                    println!("pushed {}", operators.last().unwrap())
+                }
+
+                else 
+                {
+                    while !operators.is_empty()
+                        && precedence.contains_key(operators.last().unwrap())
+                        && precedence.get(operators.last().unwrap()).unwrap() >= precedence.get(&Operator::Minus).unwrap() 
+                        {
+                            _apply_operator(&mut operands, operators.pop().unwrap());
+                        }
+                    operators.push(Operator::Minus);
                 }
             }
 
@@ -443,7 +443,6 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
 //        prevvalue = Some(value);
     }
 
-    println!("curr operators {:?}, and curr operands {:?}", operators, operands);
 
     while !operators.is_empty() {
         _apply_operator(&mut operands, operators.pop().unwrap());
@@ -479,6 +478,5 @@ pub fn evaluate(expression: &str, variables: IndexMap<String, Data>) -> f64 {
             panic!("SyntaxError: {:?} in expression '{}'", e, expression);
         }
     };
-
     result
 }

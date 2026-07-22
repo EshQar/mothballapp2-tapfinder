@@ -16,6 +16,7 @@ input.txt
 output.txt
 benchmark.py
 new_code.txt
+profile.json.gz
 /target/
 
 # PyInstaller output

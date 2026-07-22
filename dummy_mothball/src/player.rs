@@ -283,7 +283,7 @@ impl PossibilitiesRecordParam {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum State {
     Ground,
     Air,
@@ -631,6 +631,10 @@ impl PlayerSimulationXZ {
     pub fn has_function(&self, alias: &str) -> bool {
         self.functions.contains_key(&self.alias_to_id_map[alias])
     }
+
+    pub fn safe_has_function(&self, alias: &str) -> bool {
+        self.functions.contains_key(&self.alias_to_id_map.get(alias).unwrap_or(&-1))
+    }
 }
 
 impl PlayerSimulationXZ {
@@ -757,97 +761,97 @@ impl PlayerSimulationXZ {
         local_vars.insert("px".to_string(), parser::Data::Float(0.0625));
         let mut funcs: Vec<(i32, Function)> = Vec::new();
         // Do not ask 😭😭😭
-		funcs.push((1, Function::OutZ(FunctionData::new(1, "outz".to_string(), vec!["outz".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("outz".to_string())), false)]))));
-		funcs.push((2, Function::Zmm(FunctionData::new(2, "zmm".to_string(), vec!["zmm".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("zmm".to_string())), false)]))));
-		funcs.push((3, Function::Bwmm(FunctionData::new(3, "bwmm".to_string(), vec!["bwmm".to_string()], vec![Argument::PositionalOnly("zmm".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((4, Function::Zb(FunctionData::new(4, "zb".to_string(), vec!["zb".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("zb".to_string())), false)]))));
-		funcs.push((5, Function::OutVz(FunctionData::new(5, "outvz".to_string(), vec!["outvz".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("vz".to_string())), false)]))));
-		funcs.push((6, Function::Wall(FunctionData::new(6, "wall".to_string(), vec!["wall".to_string(), "inv".to_string()], vec![Argument::PositionalOnly("z".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((7, Function::OutX(FunctionData::new(7, "outx".to_string(), vec!["outx".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("outx".to_string())), false)]))));
-		funcs.push((8, Function::Xmm(FunctionData::new(8, "xmm".to_string(), vec!["xmm".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("xmm".to_string())), false)]))));
-		funcs.push((9, Function::Blocks(FunctionData::new(9, "blocks".to_string(), vec!["blocks".to_string()], vec![Argument::PositionalOnly("zb".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((10, Function::Xb(FunctionData::new(10, "xb".to_string(), vec!["xb".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("xb".to_string())), false)]))));
-		funcs.push((11, Function::OutVx(FunctionData::new(11, "outvx".to_string(), vec!["outvx".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("vx".to_string())), false)]))));
-		funcs.push((12, Function::XBwmm(FunctionData::new(12, "xbwmm".to_string(), vec!["xbwmm".to_string()], vec![Argument::PositionalOnly("xmm".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((13, Function::Vec(FunctionData::new(13, "vec".to_string(), vec!["vec".to_string()], vec![]))));
-		funcs.push((14, Function::OutAngle(FunctionData::new(14, "outfacing".to_string(), vec!["outfacing".to_string(), "outangle".to_string(), "outa".to_string(), "outf".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("facing".to_string())), false)]))));
-		funcs.push((15, Function::XWall(FunctionData::new(15, "xwall".to_string(), vec!["xwall".to_string(), "xinv".to_string()], vec![Argument::PositionalOnly("x".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((16, Function::OutTurn(FunctionData::new(16, "outturn".to_string(), vec!["outturn".to_string(), "outt".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("turn".to_string())), false)]))));
-		funcs.push((17, Function::EffectsMultiplier(FunctionData::new(17, "effectsmultiplier".to_string(), vec!["effectsmultiplier".to_string(), "effects".to_string()], vec![Argument::PositionalOrKeyword("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::PositionalOrKeyword("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((18, Function::Walk(FunctionData::new(18, "walk".to_string(), vec!["walk".to_string(), "w".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((19, Function::XBlocks(FunctionData::new(19, "xblocks".to_string(), vec!["xblocks".to_string()], vec![Argument::PositionalOnly("xb".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((20, Function::AngleInfo(FunctionData::new(20, "angleinfo".to_string(), vec!["angleinfo".to_string(), "ai".to_string()], vec![Argument::PositionalOnly("angle".to_string(), ArgumentValue::HasValue(DataType::F32, FullArgumentValue::F32(0.0f32)), false)]))));
-		funcs.push((21, Function::Walk45(FunctionData::new(21, "walk45".to_string(), vec!["walk45".to_string(), "w45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((22, Function::Face(FunctionData::new(22, "facing".to_string(), vec!["facing".to_string(), "face".to_string(), "f".to_string()], vec![Argument::PositionalOnly("angle_in_degrees".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
-		funcs.push((23, Function::Sprint(FunctionData::new(23, "sprint".to_string(), vec!["sprint".to_string(), "s".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((24, Function::Turn(FunctionData::new(24, "turn".to_string(), vec!["turn".to_string()], vec![Argument::PositionalOnly("angle_in_degrees".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
-		funcs.push((25, Function::Sprint45(FunctionData::new(25, "sprint45".to_string(), vec!["sprint45".to_string(), "s45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((26, Function::Macro(FunctionData::new(26, "macro".to_string(), vec!["macro".to_string()], vec![Argument::PositionalOnly("name".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOnly("formatting".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("mpk".to_string())), false)]))));
-		funcs.push((27, Function::SetPosZ(FunctionData::new(27, "setposz".to_string(), vec!["setposz".to_string(), "z".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((28, Function::WalkAir(FunctionData::new(28, "walkair".to_string(), vec!["walkair".to_string(), "wa".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((29, Function::SetVz(FunctionData::new(29, "setvz".to_string(), vec!["setvz".to_string(), "vz".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((30, Function::WalkAir45(FunctionData::new(30, "walkair45".to_string(), vec!["walkair45".to_string(), "wa45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((31, Function::SetPosX(FunctionData::new(31, "setposx".to_string(), vec!["setposx".to_string(), "x".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((32, Function::SprintAir(FunctionData::new(32, "sprintair".to_string(), vec!["sprintair".to_string(), "sa".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((33, Function::SetVx(FunctionData::new(33, "setvx".to_string(), vec!["setvx".to_string(), "vx".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((34, Function::SprintAir45(FunctionData::new(34, "sprintair45".to_string(), vec!["sprintair45".to_string(), "sa45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((35, Function::AddPosZ(FunctionData::new(35, "addposz".to_string(), vec!["addposz".to_string(), "addz".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((36, Function::WalkJump(FunctionData::new(36, "walkjump".to_string(), vec!["walkjump".to_string(), "wj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((37, Function::AddPosX(FunctionData::new(37, "addposx".to_string(), vec!["addposx".to_string(), "addx".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((38, Function::WalkJump45(FunctionData::new(38, "walkjump45".to_string(), vec!["walkjump45".to_string(), "wj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((39, Function::AddVx(FunctionData::new(39, "addvx".to_string(), vec!["addvx".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((40, Function::WalkPessi(FunctionData::new(40, "walkpessi".to_string(), vec!["walkpessi".to_string(), "wp".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((41, Function::AddVz(FunctionData::new(41, "addvz".to_string(), vec!["addvz".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((42, Function::WalkPessi45(FunctionData::new(42, "walkpessi45".to_string(), vec!["walkpessi45".to_string(), "wp45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((43, Function::SetSlip(FunctionData::new(43, "setslip".to_string(), vec!["setslip".to_string(), "slip".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
-		funcs.push((44, Function::SprintJump(FunctionData::new(44, "sprintjump".to_string(), vec!["sprintjump".to_string(), "sj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((45, Function::Inertia(FunctionData::new(45, "inertia".to_string(), vec!["inertia".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::F32), true), Argument::PositionalOrKeyword("single_axis".to_string(), ArgumentValue::Empty(DataType::Bool), false)]))));
-		funcs.push((46, Function::SprintJump45(FunctionData::new(46, "sprintjump45".to_string(), vec!["sprintjump45".to_string(), "sj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((47, Function::SprintAirDelay(FunctionData::new(47, "sprintairdelay".to_string(), vec!["sprintairdelay".to_string(), "sdel".to_string()], vec![Argument::PositionalOnly("toggle".to_string(), ArgumentValue::Empty(DataType::Bool), true)]))));
-		funcs.push((48, Function::SprintStrafeJump(FunctionData::new(48, "sprintstrafejump".to_string(), vec!["sprintstrafejump".to_string(), "strafejump".to_string(), "stfj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((49, Function::SneakDelay(FunctionData::new(49, "sneakdelay".to_string(), vec!["sneakdelay".to_string(), "sndel".to_string()], vec![Argument::PositionalOnly("toggle".to_string(), ArgumentValue::Empty(DataType::Bool), true)]))));
-		funcs.push((50, Function::SprintStrafeJump45(FunctionData::new(50, "sprintstrafejump45".to_string(), vec!["sprintstrafejump45".to_string(), "strafejump45".to_string(), "stfj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((51, Function::SingleAxisInertia(FunctionData::new(51, "singleaxisinertia".to_string(), vec!["singleaxisinertia".to_string(), "sai".to_string()], vec![Argument::PositionalOnly("toggle".to_string(), ArgumentValue::Empty(DataType::Bool), true)]))));
-		funcs.push((52, Function::SprintPessi(FunctionData::new(52, "sprintpessi".to_string(), vec!["sprintpessi".to_string(), "sp".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((53, Function::Version(FunctionData::new(53, "version".to_string(), vec!["version".to_string(), "v".to_string()], vec![Argument::PositionalOnly("string".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((54, Function::SprintPessi45(FunctionData::new(54, "sprintpessi45".to_string(), vec!["sprintpessi45".to_string(), "sp45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((55, Function::Repeat(FunctionData::new(55, "repeat".to_string(), vec!["repeat".to_string(), "r".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOnly("count".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
-		funcs.push((56, Function::Speed(FunctionData::new(56, "speed".to_string(), vec!["speed".to_string()], vec![Argument::PositionalOnly("multiplier".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
-		funcs.push((57, Function::ForceMomentum(FunctionData::new(57, "forcemomentum".to_string(), vec!["forcemomentum".to_string(), "fmm".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((58, Function::Slowness(FunctionData::new(58, "slowness".to_string(), vec!["slowness".to_string(), "slow".to_string()], vec![Argument::PositionalOnly("multiplier".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
-		funcs.push((59, Function::ForceMomentum45(FunctionData::new(59, "forcemomentum45".to_string(), vec!["forcemomentum45".to_string(), "fmm45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((60, Function::Print(FunctionData::new(60, "print".to_string(), vec!["print".to_string()], vec![Argument::PositionalOnly("string".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("".to_string())), false)]))));
-		funcs.push((61, Function::AngleQueue(FunctionData::new(61, "anglequeue".to_string(), vec!["anglequeue".to_string(), "aq".to_string()], vec![Argument::VarPositional("angles".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
-		funcs.push((62, Function::Sneak(FunctionData::new(62, "sneak".to_string(), vec!["sneak".to_string(), "sn".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((63, Function::TurnQueue(FunctionData::new(63, "turnqueue".to_string(), vec!["turnqueue".to_string(), "tq".to_string()], vec![Argument::VarPositional("angles".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((64, Function::Sneak45(FunctionData::new(64, "sneak45".to_string(), vec!["sneak45".to_string(), "sn45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((65, Function::Var(FunctionData::new(65, "var".to_string(), vec!["var".to_string()], vec![Argument::PositionalOnly("variable_name".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Str), false)]))));
-		funcs.push((66, Function::SneakAir(FunctionData::new(66, "sneakair".to_string(), vec!["sneakair".to_string(), "sna".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((67, Function::SetPrecision(FunctionData::new(67, "setprecision".to_string(), vec!["setprecision".to_string(), "precision".to_string(), "pre".to_string()], vec![Argument::PositionalOnly("decimal_places".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
-		funcs.push((68, Function::Possibilities(FunctionData::new(68, "possibilities".to_string(), vec!["possibilities".to_string(), "poss".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOnly("min_distance".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::KeywordOnly("increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("miss".to_string(), ArgumentValue::Empty(DataType::Float), false)]))));
-		funcs.push((69, Function::SneakAir45(FunctionData::new(69, "sneakair45".to_string(), vec!["sneakair45".to_string(), "sna45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((70, Function::SneakJump(FunctionData::new(70, "sneakjump".to_string(), vec!["sneakjump".to_string(), "snj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((71, Function::BallHelp(FunctionData::new(71, "ballhelp".to_string(), vec!["ballhelp".to_string(), "help".to_string()], vec![Argument::PositionalOrKeyword("func".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
-		funcs.push((72, Function::XPossibilities(FunctionData::new(72, "xpossibilities".to_string(), vec!["xpossibilities".to_string(), "xposs".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOnly("min_distance".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::KeywordOnly("increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("miss".to_string(), ArgumentValue::Empty(DataType::Float), false)]))));
-		funcs.push((73, Function::SneakJump45(FunctionData::new(73, "sneakjump45".to_string(), vec!["sneakjump45".to_string(), "snj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((74, Function::Stop(FunctionData::new(74, "stopground".to_string(), vec!["stopground".to_string(), "stop".to_string(), "st".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((75, Function::StopAir(FunctionData::new(75, "stopair".to_string(), vec!["stopair".to_string(), "sta".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false)]))));
-		funcs.push((76, Function::XZPossibilities(FunctionData::new(76, "xzpossibilities".to_string(), vec!["xzpossibilities".to_string(), "xzposs".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOnly("min_distance".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("x_offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::PositionalOnly("z_offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::KeywordOnly("x_increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("z_increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("miss".to_string(), ArgumentValue::Empty(DataType::Float), false)]))));
-		funcs.push((77, Function::StopJump(FunctionData::new(77, "stopjump".to_string(), vec!["stopjump".to_string(), "stj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((78, Function::SneakStop(FunctionData::new(78, "sneakstop".to_string(), vec!["sneakstop".to_string(), "snst".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((79, Function::InertiaListener(FunctionData::new(79, "xzinertialistener".to_string(), vec!["xzinertialistener".to_string(), "inertialistener".to_string(), "xzil".to_string(), "il".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOrKeyword("tolerance".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.002f64)), false)]))));
-		funcs.push((80, Function::SneakStopAir(FunctionData::new(80, "sneakstopair".to_string(), vec!["sneakstopair".to_string(), "snsta".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false)]))));
-		funcs.push((81, Function::SneakStopJump(FunctionData::new(81, "sneakstopjump".to_string(), vec!["sneakstopjump".to_string(), "snstj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((82, Function::XInertiaListener(FunctionData::new(82, "xinertialistener".to_string(), vec!["xinertialistener".to_string(), "xil".to_string()], vec![Argument::PositionalOrKeyword("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOrKeyword("tolerance".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.002f64)), false)]))));
-		funcs.push((83, Function::SneakSprint(FunctionData::new(83, "sneaksprint".to_string(), vec!["sneaksprint".to_string(), "sns".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((84, Function::SneakSprint45(FunctionData::new(84, "sneaksprint45".to_string(), vec!["sneaksprint45".to_string(), "sns45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((85, Function::ZInertiaListener(FunctionData::new(85, "zinertialistener".to_string(), vec!["zinertialistener".to_string(), "zil".to_string()], vec![Argument::PositionalOrKeyword("sequence".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOrKeyword("tolerance".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.002f64)), false)]))));
-		funcs.push((86, Function::SneakSprintAir(FunctionData::new(86, "sneaksprintair".to_string(), vec!["sneaksprintair".to_string(), "snsa".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((87, Function::Dimensions(FunctionData::new(87, "dimensions".to_string(), vec!["dimensions".to_string(), "dim".to_string()], vec![Argument::PositionalOnly("x".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("z".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
-		funcs.push((88, Function::SneakSprintAir45(FunctionData::new(88, "sneaksprintair45".to_string(), vec!["sneaksprintair45".to_string(), "snsa45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
-		funcs.push((89, Function::SneakSprintJump(FunctionData::new(89, "sneaksprintjump".to_string(), vec!["sneaksprintjump".to_string(), "snsj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((90, Function::SneakSprintJump45(FunctionData::new(90, "sneaksprintjump45".to_string(), vec!["sneaksprintjump45".to_string(), "snsj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
-		funcs.push((91, Function::Taps(FunctionData::new(91, "taps".to_string(), vec!["taps".to_string()], vec![Argument::VarPositional("seq_or_num".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
+		funcs.push((1, Function::Zmm(FunctionData::new(1, "zmm".to_string(), vec!["zmm".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("zmm".to_string())), false)]))));
+		funcs.push((2, Function::Bwmm(FunctionData::new(2, "bwmm".to_string(), vec!["bwmm".to_string()], vec![Argument::PositionalOnly("zmm".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((3, Function::Zb(FunctionData::new(3, "zb".to_string(), vec!["zb".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("zb".to_string())), false)]))));
+		funcs.push((4, Function::OutVz(FunctionData::new(4, "outvz".to_string(), vec!["outvz".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("vz".to_string())), false)]))));
+		funcs.push((5, Function::Wall(FunctionData::new(5, "wall".to_string(), vec!["wall".to_string(), "inv".to_string()], vec![Argument::PositionalOnly("z".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((6, Function::OutX(FunctionData::new(6, "outx".to_string(), vec!["outx".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("outx".to_string())), false)]))));
+		funcs.push((7, Function::Xmm(FunctionData::new(7, "xmm".to_string(), vec!["xmm".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("xmm".to_string())), false)]))));
+		funcs.push((8, Function::Blocks(FunctionData::new(8, "blocks".to_string(), vec!["blocks".to_string()], vec![Argument::PositionalOnly("zb".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((9, Function::Xb(FunctionData::new(9, "xb".to_string(), vec!["xb".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("xb".to_string())), false)]))));
+		funcs.push((10, Function::OutVx(FunctionData::new(10, "outvx".to_string(), vec!["outvx".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("vx".to_string())), false)]))));
+		funcs.push((11, Function::XBwmm(FunctionData::new(11, "xbwmm".to_string(), vec!["xbwmm".to_string()], vec![Argument::PositionalOnly("xmm".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((12, Function::Vec(FunctionData::new(12, "vec".to_string(), vec!["vec".to_string()], vec![]))));
+		funcs.push((13, Function::OutAngle(FunctionData::new(13, "outfacing".to_string(), vec!["outfacing".to_string(), "outangle".to_string(), "outf".to_string(), "outa".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("facing".to_string())), false)]))));
+		funcs.push((14, Function::XWall(FunctionData::new(14, "xwall".to_string(), vec!["xwall".to_string(), "xinv".to_string()], vec![Argument::PositionalOnly("x".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((15, Function::OutTurn(FunctionData::new(15, "outturn".to_string(), vec!["outturn".to_string(), "outt".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("turn".to_string())), false)]))));
+		funcs.push((16, Function::EffectsMultiplier(FunctionData::new(16, "effectsmultiplier".to_string(), vec!["effectsmultiplier".to_string(), "effects".to_string()], vec![Argument::PositionalOrKeyword("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::PositionalOrKeyword("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((17, Function::Walk(FunctionData::new(17, "walk".to_string(), vec!["walk".to_string(), "w".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((18, Function::XBlocks(FunctionData::new(18, "xblocks".to_string(), vec!["xblocks".to_string()], vec![Argument::PositionalOnly("xb".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((19, Function::AngleInfo(FunctionData::new(19, "angleinfo".to_string(), vec!["angleinfo".to_string(), "ai".to_string()], vec![Argument::PositionalOnly("angle".to_string(), ArgumentValue::HasValue(DataType::F32, FullArgumentValue::F32(0.0f32)), false)]))));
+		funcs.push((20, Function::Walk45(FunctionData::new(20, "walk45".to_string(), vec!["walk45".to_string(), "w45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((21, Function::Face(FunctionData::new(21, "facing".to_string(), vec!["facing".to_string(), "face".to_string(), "f".to_string()], vec![Argument::PositionalOnly("angle_in_degrees".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
+		funcs.push((22, Function::Sprint(FunctionData::new(22, "sprint".to_string(), vec!["sprint".to_string(), "s".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((23, Function::Turn(FunctionData::new(23, "turn".to_string(), vec!["turn".to_string()], vec![Argument::PositionalOnly("angle_in_degrees".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
+		funcs.push((24, Function::Sprint45(FunctionData::new(24, "sprint45".to_string(), vec!["sprint45".to_string(), "s45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((25, Function::Macro(FunctionData::new(25, "macro".to_string(), vec!["macro".to_string()], vec![Argument::PositionalOnly("name".to_string(), ArgumentValue::Empty(DataType::Str), true), Argument::PositionalOnly("formatting".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("mpk".to_string())), false)]))));
+		funcs.push((26, Function::SetPosZ(FunctionData::new(26, "setposz".to_string(), vec!["setposz".to_string(), "z".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((27, Function::WalkAir(FunctionData::new(27, "walkair".to_string(), vec!["walkair".to_string(), "wa".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((28, Function::SetVz(FunctionData::new(28, "setvz".to_string(), vec!["setvz".to_string(), "vz".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((29, Function::WalkAir45(FunctionData::new(29, "walkair45".to_string(), vec!["walkair45".to_string(), "wa45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((30, Function::SetPosX(FunctionData::new(30, "setposx".to_string(), vec!["setposx".to_string(), "x".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((31, Function::SprintAir(FunctionData::new(31, "sprintair".to_string(), vec!["sprintair".to_string(), "sa".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((32, Function::SetVx(FunctionData::new(32, "setvx".to_string(), vec!["setvx".to_string(), "vx".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((33, Function::SprintAir45(FunctionData::new(33, "sprintair45".to_string(), vec!["sprintair45".to_string(), "sa45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((34, Function::AddPosZ(FunctionData::new(34, "addposz".to_string(), vec!["addposz".to_string(), "addz".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((35, Function::WalkJump(FunctionData::new(35, "walkjump".to_string(), vec!["walkjump".to_string(), "wj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((36, Function::AddPosX(FunctionData::new(36, "addposx".to_string(), vec!["addposx".to_string(), "addx".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((37, Function::WalkJump45(FunctionData::new(37, "walkjump45".to_string(), vec!["walkjump45".to_string(), "wj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((38, Function::AddVx(FunctionData::new(38, "addvx".to_string(), vec!["addvx".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((39, Function::WalkPessi(FunctionData::new(39, "walkpessi".to_string(), vec!["walkpessi".to_string(), "wp".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((40, Function::AddVz(FunctionData::new(40, "addvz".to_string(), vec!["addvz".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((41, Function::WalkPessi45(FunctionData::new(41, "walkpessi45".to_string(), vec!["walkpessi45".to_string(), "wp45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((42, Function::SetSlip(FunctionData::new(42, "setslip".to_string(), vec!["setslip".to_string(), "slip".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
+		funcs.push((43, Function::SprintJump(FunctionData::new(43, "sprintjump".to_string(), vec!["sprintjump".to_string(), "sj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((44, Function::Inertia(FunctionData::new(44, "inertia".to_string(), vec!["inertia".to_string()], vec![Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::F32), true), Argument::PositionalOrKeyword("single_axis".to_string(), ArgumentValue::Empty(DataType::Bool), false)]))));
+		funcs.push((45, Function::SprintJump45(FunctionData::new(45, "sprintjump45".to_string(), vec!["sprintjump45".to_string(), "sj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((46, Function::SprintAirDelay(FunctionData::new(46, "sprintairdelay".to_string(), vec!["sprintairdelay".to_string(), "sdel".to_string()], vec![Argument::PositionalOnly("toggle".to_string(), ArgumentValue::Empty(DataType::Bool), true)]))));
+		funcs.push((47, Function::SprintStrafeJump(FunctionData::new(47, "sprintstrafejump".to_string(), vec!["sprintstrafejump".to_string(), "strafejump".to_string(), "stfj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((48, Function::SneakDelay(FunctionData::new(48, "sneakdelay".to_string(), vec!["sneakdelay".to_string(), "sndel".to_string()], vec![Argument::PositionalOnly("toggle".to_string(), ArgumentValue::Empty(DataType::Bool), true)]))));
+		funcs.push((49, Function::SprintStrafeJump45(FunctionData::new(49, "sprintstrafejump45".to_string(), vec!["sprintstrafejump45".to_string(), "strafejump45".to_string(), "stfj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((50, Function::SingleAxisInertia(FunctionData::new(50, "singleaxisinertia".to_string(), vec!["singleaxisinertia".to_string(), "sai".to_string()], vec![Argument::PositionalOnly("toggle".to_string(), ArgumentValue::Empty(DataType::Bool), true)]))));
+		funcs.push((51, Function::SprintPessi(FunctionData::new(51, "sprintpessi".to_string(), vec!["sprintpessi".to_string(), "sp".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((52, Function::Version(FunctionData::new(52, "version".to_string(), vec!["version".to_string(), "v".to_string()], vec![Argument::PositionalOnly("string".to_string(), ArgumentValue::Empty(DataType::Str), true)]))));
+		funcs.push((53, Function::SprintPessi45(FunctionData::new(53, "sprintpessi45".to_string(), vec!["sprintpessi45".to_string(), "sp45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((54, Function::Repeat(FunctionData::new(54, "repeat".to_string(), vec!["repeat".to_string(), "r".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true), Argument::PositionalOnly("count".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
+		funcs.push((55, Function::Speed(FunctionData::new(55, "speed".to_string(), vec!["speed".to_string()], vec![Argument::PositionalOnly("multiplier".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
+		funcs.push((56, Function::ForceMomentum(FunctionData::new(56, "forcemomentum".to_string(), vec!["forcemomentum".to_string(), "fmm".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((57, Function::Slowness(FunctionData::new(57, "slowness".to_string(), vec!["slowness".to_string(), "slow".to_string()], vec![Argument::PositionalOnly("multiplier".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
+		funcs.push((58, Function::ForceMomentum45(FunctionData::new(58, "forcemomentum45".to_string(), vec!["forcemomentum45".to_string(), "fmm45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("delay".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((59, Function::Print(FunctionData::new(59, "print".to_string(), vec!["print".to_string()], vec![Argument::PositionalOnly("string".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("".to_string())), false)]))));
+		funcs.push((60, Function::AngleQueue(FunctionData::new(60, "anglequeue".to_string(), vec!["anglequeue".to_string(), "aq".to_string()], vec![Argument::VarPositional("angles".to_string(), ArgumentValue::Empty(DataType::F32), true)]))));
+		funcs.push((61, Function::Sneak(FunctionData::new(61, "sneak".to_string(), vec!["sneak".to_string(), "sn".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((62, Function::TurnQueue(FunctionData::new(62, "turnqueue".to_string(), vec!["turnqueue".to_string(), "tq".to_string()], vec![Argument::VarPositional("angles".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((63, Function::Sneak45(FunctionData::new(63, "sneak45".to_string(), vec!["sneak45".to_string(), "sn45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((64, Function::Var(FunctionData::new(64, "var".to_string(), vec!["var".to_string()], vec![Argument::PositionalOnly("variable_name".to_string(), ArgumentValue::Empty(DataType::NameString), true), Argument::PositionalOnly("value".to_string(), ArgumentValue::Empty(DataType::MothballSequence), false)]))));
+		funcs.push((65, Function::SneakAir(FunctionData::new(65, "sneakair".to_string(), vec!["sneakair".to_string(), "sna".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((66, Function::SetPrecision(FunctionData::new(66, "setprecision".to_string(), vec!["setprecision".to_string(), "precision".to_string(), "pre".to_string()], vec![Argument::PositionalOnly("decimal_places".to_string(), ArgumentValue::Empty(DataType::Int), true)]))));
+		funcs.push((67, Function::Possibilities(FunctionData::new(67, "possibilities".to_string(), vec!["possibilities".to_string(), "poss".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true), Argument::PositionalOnly("min_distance".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::KeywordOnly("increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("miss".to_string(), ArgumentValue::Empty(DataType::Float), false)]))));
+		funcs.push((68, Function::SneakAir45(FunctionData::new(68, "sneakair45".to_string(), vec!["sneakair45".to_string(), "sna45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((69, Function::SneakJump(FunctionData::new(69, "sneakjump".to_string(), vec!["sneakjump".to_string(), "snj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((70, Function::BallHelp(FunctionData::new(70, "ballhelp".to_string(), vec!["ballhelp".to_string(), "help".to_string()], vec![Argument::PositionalOrKeyword("func".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((71, Function::XPossibilities(FunctionData::new(71, "xpossibilities".to_string(), vec!["xpossibilities".to_string(), "xposs".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true), Argument::PositionalOnly("min_distance".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::KeywordOnly("increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("miss".to_string(), ArgumentValue::Empty(DataType::Float), false)]))));
+		funcs.push((72, Function::SneakJump45(FunctionData::new(72, "sneakjump45".to_string(), vec!["sneakjump45".to_string(), "snj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((73, Function::Stop(FunctionData::new(73, "stopground".to_string(), vec!["stopground".to_string(), "stop".to_string(), "st".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((74, Function::StopAir(FunctionData::new(74, "stopair".to_string(), vec!["stopair".to_string(), "sta".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false)]))));
+		funcs.push((75, Function::XZPossibilities(FunctionData::new(75, "xzpossibilities".to_string(), vec!["xzpossibilities".to_string(), "xzposs".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true), Argument::PositionalOnly("min_distance".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("x_offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::PositionalOnly("z_offset".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.6f64)), false), Argument::KeywordOnly("x_increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("z_increment".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0625f64)), false), Argument::KeywordOnly("miss".to_string(), ArgumentValue::Empty(DataType::Float), false)]))));
+		funcs.push((76, Function::StopJump(FunctionData::new(76, "stopjump".to_string(), vec!["stopjump".to_string(), "stj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((77, Function::SneakStop(FunctionData::new(77, "sneakstop".to_string(), vec!["sneakstop".to_string(), "snst".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((78, Function::InertiaListener(FunctionData::new(78, "xzinertialistener".to_string(), vec!["xzinertialistener".to_string(), "inertialistener".to_string(), "xzil".to_string(), "il".to_string()], vec![Argument::PositionalOnly("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true), Argument::PositionalOrKeyword("tolerance".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.002f64)), false)]))));
+		funcs.push((79, Function::SneakStopAir(FunctionData::new(79, "sneakstopair".to_string(), vec!["sneakstopair".to_string(), "snsta".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false)]))));
+		funcs.push((80, Function::SneakStopJump(FunctionData::new(80, "sneakstopjump".to_string(), vec!["sneakstopjump".to_string(), "snstj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((81, Function::XInertiaListener(FunctionData::new(81, "xinertialistener".to_string(), vec!["xinertialistener".to_string(), "xil".to_string()], vec![Argument::PositionalOrKeyword("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true), Argument::PositionalOrKeyword("tolerance".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.002f64)), false)]))));
+		funcs.push((82, Function::SneakSprint(FunctionData::new(82, "sneaksprint".to_string(), vec!["sneaksprint".to_string(), "sns".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((83, Function::SneakSprint45(FunctionData::new(83, "sneaksprint45".to_string(), vec!["sneaksprint45".to_string(), "sns45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((84, Function::ZInertiaListener(FunctionData::new(84, "zinertialistener".to_string(), vec!["zinertialistener".to_string(), "zil".to_string()], vec![Argument::PositionalOrKeyword("sequence".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true), Argument::PositionalOrKeyword("tolerance".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.002f64)), false)]))));
+		funcs.push((85, Function::SneakSprintAir(FunctionData::new(85, "sneaksprintair".to_string(), vec!["sneaksprintair".to_string(), "snsa".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((86, Function::Dimensions(FunctionData::new(86, "dimensions".to_string(), vec!["dimensions".to_string(), "dim".to_string()], vec![Argument::PositionalOnly("x".to_string(), ArgumentValue::Empty(DataType::Float), true), Argument::PositionalOnly("z".to_string(), ArgumentValue::Empty(DataType::Float), true)]))));
+		funcs.push((87, Function::SneakSprintAir45(FunctionData::new(87, "sneaksprintair45".to_string(), vec!["sneaksprintair45".to_string(), "snsa45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false)]))));
+		funcs.push((88, Function::SneakSprintJump(FunctionData::new(88, "sneaksprintjump".to_string(), vec!["sneaksprintjump".to_string(), "snsj".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((89, Function::SneakSprintJump45(FunctionData::new(89, "sneaksprintjump45".to_string(), vec!["sneaksprintjump45".to_string(), "snsj45".to_string()], vec![Argument::PositionalOnly("duration".to_string(), ArgumentValue::HasValue(DataType::Int, FullArgumentValue::Int(1)), false), Argument::PositionalOnly("rotation".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("slip".to_string(), ArgumentValue::Empty(DataType::F32), false), Argument::KeywordOnly("speed".to_string(), ArgumentValue::Empty(DataType::Int), false), Argument::KeywordOnly("slow".to_string(), ArgumentValue::Empty(DataType::Int), false)]))));
+		funcs.push((90, Function::Taps(FunctionData::new(90, "taps".to_string(), vec!["taps".to_string()], vec![Argument::VarPositional("seq_or_num".to_string(), ArgumentValue::Empty(DataType::MothballSequence), true)]))));
+		funcs.push((91, Function::OutZ(FunctionData::new(91, "outz".to_string(), vec!["outz".to_string()], vec![Argument::PositionalOnly("centered_about".to_string(), ArgumentValue::HasValue(DataType::Float, FullArgumentValue::Float(0.0f64)), false), Argument::PositionalOrKeyword("label".to_string(), ArgumentValue::HasValue(DataType::Str, FullArgumentValue::Str("outz".to_string())), false)]))));
 
         let mut alias_to_id_map: HashMap<String, i32> = HashMap::new();
         for (id, func) in funcs.iter() {
@@ -2014,7 +2018,7 @@ impl PlayerSimulationXZ {
         }
 
 
-        if self.has_function(variable_name.trim()) {
+        if self.safe_has_function(variable_name.trim()) {
             panic!(
                 "Cannot set variable name '{}' as it is a function name",
                 variable_name.trim()
@@ -2035,7 +2039,7 @@ impl PlayerSimulationXZ {
 
         let value = value.unwrap();
 
-        let mut final_value = value.to_string();
+        let final_value = value.to_string();
 
 
         match Ok::<f64, errors::RuntimeError>(expr_eval::evaluate(
@@ -2043,7 +2047,10 @@ impl PlayerSimulationXZ {
             self.local_vars.clone(),
         )) {
             Ok(result) => {
-                final_value = result.to_string();
+                self.local_vars.insert(
+                variable_name,
+                parser::Data::Float(result),
+        );
             }
 
             Err(_) => {
@@ -2055,23 +2062,18 @@ impl PlayerSimulationXZ {
                 );
 
                 if let Ok(parser::Data::Str(_)) = result {
-                    ()
+                    self.local_vars.insert(
+                    variable_name,
+                    parser::Data::Str(final_value),
+                    );
                 } else {
                     panic!(
                         "Unable to deduce the value of '{}'",
                         final_value
                     );
                 }
-
-                println!("dub check here")
             }
         }
-
-
-        self.local_vars.insert(
-            variable_name,
-            parser::Data::Str(final_value),
-        );
 
         self.call_stack.pop();
     }
@@ -2124,7 +2126,7 @@ impl PlayerSimulationXZ {
     fn tokenize(&mut self, string: &str, locals: Option<IndexMap<String, parser::Data>>) -> parser::Tokenized {
         let output = parser::tokenize(self, string, locals);
         match output {
-            Ok(out) => out,
+            Ok(out) => { out },
             Err(error) => panic!("{}", error)
         }
     }
@@ -2944,82 +2946,82 @@ impl PlayerSimulationXZ {
 }
 
 impl PlayerSimulationXZ {
-    pub fn outz(&mut self, centered_about: f32, label: &str) {
+    pub fn outz(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::ZLabel,
             label.to_string(),
             StringOrNum::Num(self.z),
-            centered_about as f64,
+            centered_about,
             true,
         ).unwrap();
     }
 
-    pub fn zmm(&mut self, centered_about: f32, label: &str) {
+    pub fn zmm(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::ZLabel,
             label.to_string(),
             StringOrNum::Num(math::dist_to_mmf64(self.z)),
-            centered_about as f64,
+            centered_about,
             true,
         ).unwrap();
     }
 
-    pub fn zb(&mut self, centered_about: f32, label: &str) {
+    pub fn zb(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::ZLabel,
             label.to_string(),
             StringOrNum::Num(math::dist_to_blockf64(self.z)),
-            centered_about as f64,
+            centered_about,
             true,
         ).unwrap();
     }
 
-    pub fn outvz(&mut self, centered_about: f32, label: &str) {
+    pub fn outvz(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::ZLabel,
             label.to_string(),
             StringOrNum::Num(self.vz),
-            centered_about as f64,
+            centered_about,
             true
         ).unwrap();
     }
 
-    pub fn outx(&mut self, centered_about: f32, label: &str) {
+    pub fn outx(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::XLabel,
             label.to_string(),
             StringOrNum::Num(self.x),
-            centered_about as f64,
+            centered_about,
             true,
         ).unwrap();
     }
 
-    pub fn xmm(&mut self, centered_about: f32, label: &str) {
+    pub fn xmm(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::XLabel,
             label.to_string(),
             StringOrNum::Num(math::dist_to_mmf64(self.x)),
-            centered_about as f64,
+            centered_about,
             true,
         ).unwrap();
     }
 
-    pub fn xb(&mut self, centered_about: f32, label: &str) {
+    pub fn xb(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::XLabel,
             label.to_string(),
             StringOrNum::Num(math::dist_to_blockf64(self.x)),
-            centered_about as f64,
+            centered_about,
             true
         ).unwrap();
     }
 
-    pub fn outvx(&mut self, centered_about: f32, label: &str) {
+    pub fn outvx(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::XLabel,
             label.to_string(),
             StringOrNum::Num(self.vx),
-            centered_about as f64,
+            centered_about,
             true
         ).unwrap();
     }
@@ -3042,22 +3044,22 @@ impl PlayerSimulationXZ {
         );
     }
 
-    pub fn outangle(&mut self, centered_about: f32, label: &str) {
+    pub fn outangle(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::GeneralLabelWithNumber,
             label.to_string(),
             StringOrNum::Num(self.rotation as f64),
-            centered_about as f64,
+            centered_about,
             true,
         ).unwrap();
     }
 
-    pub fn outturn(&mut self, centered_about: f32, label: &str) {
+    pub fn outturn(&mut self, centered_about: f64, label: &str) {
         self.last_returned_value = self.add_to_output(
             ExpressionType::GeneralLabelWithNumber,
             label.to_string(),
             StringOrNum::Num(self.last_turn as f64),
-            centered_about as f64,
+            centered_about,
             true
         ).unwrap();
     }
@@ -3933,6 +3935,49 @@ impl PlayerSimulationXZ {
         self.add_to_output(ExpressionType::XLabel,"VX".to_string(), StringOrNum::Num(self.vx), 0.0f64, true);
     }
 
+    pub fn return_output(&self) -> Vec<Vec<String>> {
+        let mut all_output_lines: Vec<Vec<String>> = Vec::new();
+        for tup in self.output.iter() {
+            let strings: Vec<String> = match &tup.1 {
+                OutputExpression::GeneralLabel(s1) => {
+                    vec![s1.clone()]
+                }
+                OutputExpression::GeneralLabelWithNumber(s1, s2, s3) => {
+                    vec![s1.clone(), s2.to_string(), s3.clone()]
+                }
+                OutputExpression::GeneralLabelWithExpression(s1, s2, s3, s4, s5) => {
+                    vec![
+                        s1.clone(),
+                        s2.to_string(),
+                        s3.clone(),
+                        s4.to_string(),
+                        s5.clone(),
+                    ]
+                }
+                OutputExpression::Warning(s1, s2, s3) => {
+                    vec![s1.to_string(), s2.to_string(), s3.clone()]
+                }
+                OutputExpression::Text(s1) => {
+                    vec![s1.clone()]
+                }
+                OutputExpression::GeneralInertiaLabel(s1, s2, s3, s4, s5, s6) => {
+                    vec![
+                        s1.clone(),
+                        s2.to_string(),
+                        s3.clone(),
+                        s4.to_string(),
+                        s5.clone(),
+                        s6.to_string(),
+                    ]
+                }
+            };
+
+            all_output_lines.push(strings);
+        }
+
+        return all_output_lines
+    }
+
     pub fn show_output(&self) -> String {
         let mut merged_strings = Vec::new();
         for tup in self.output.iter() {
@@ -3972,7 +4017,7 @@ impl PlayerSimulationXZ {
 
 
             let ss = strings.join(" ");
-            println!("{}", ss);
+//            println!("{}", ss);
             merged_strings.push(ss);
         }
 

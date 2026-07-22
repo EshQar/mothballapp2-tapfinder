@@ -46,7 +46,7 @@ The brute-forcer expects every available parameter to be given. If you want to l
 
 1.
     ### Sorting type
-    Determines the order in which tap strats are displayed in the output field. Can be either `xmin`, `zmin`, `xmax` or `zmax`. The sorting key is determined by the sorting type entered and the list is then sorted from lowest to highest. For example if the sorting type is `xmax` it will show the strats with the lowest distance from `xmax` on the X axis at the top and those with the higest distance from `xmax` at the bottom.
+    Determines the order in which tap strats are displayed in the output field. It can sort by either `n`, `xmin`, `zmin`, `xmax` or `zmax`. You can sort by multiple keys at the same time by separating them with spaces. It will sort key by key from the back, which makes the earlier keys the most important, and sort each key such that the taps that minimize those values are displayed at the top. For example if the sorting type is `xmax` it will show the strats with the lowest distance from `xmax` on the X axis at the top and those with the higest distance from `xmax` at the bottom. If you want to sort by the amount of taps in the strat then by `xmax` you can write `n xmax`. This will result in the strats with the lowest score on `n` coming at the top and ties on `n` being sorted by `xmax`.
 
 1.
     ### Version

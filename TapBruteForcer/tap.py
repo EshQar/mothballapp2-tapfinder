@@ -94,6 +94,10 @@ class TapStrat():
             self.facings = facings_to_string(facings, float(params["fstep"]))
         else:
             self.facings = None
+
+    def count_of_taps(self):
+        print(sum(map(abs, chain.from_iterable(self.weights))))
+        return sum(map(abs, chain.from_iterable(self.weights)))
     
     def __str__(self):
         pools_names = [[self.pools[i][j].get_name(self.weights[i][j]) for j in range(len(self.pools[i]))] for i in range(len(self.pools))]

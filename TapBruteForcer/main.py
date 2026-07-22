@@ -78,21 +78,35 @@ def find_tap_strats(params):
             assert len(goals) == 1, "Something went wrong, annoy esh"
             goals = [helper.shift_goal_by_point(corner, goals[0]) for corner in corners]
 
-    sort_key = lambda x: None
-    match params["sortby"]:
-        case None:
-            if axis != 1:
-                sort_key = lambda strat: strat.dists["xmin"]
-            else:
-                sort_key = lambda strat: strat.dists["zmin"]
-        case "xmin":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
-        case "zmin":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
-        case "xmax":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
-        case "zmax":
-            sort_key = lambda strat: strat.dists[params["sortby"]]
+    sort_keys = []
+    for sortby in params["sortby"].split():
+        print("key", sortby)
+        match sortby:
+            case None:
+                if axis != 1:
+                    sort_keys.append(lambda strat: strat.dists["xmin"])
+                else:
+                    sort_keys.append(lambda strat: strat.dists["zmin"])
+            case "xmin":
+                if axis == 1:
+                    raise ValueError("Z axis only but sortby was xmin!")
+                sort_keys.append(lambda strat: strat.dists["xmin"])
+            case "zmin":
+                if axis == 0:
+                    raise ValueError("X axis only but sortby was zmin!")
+                sort_keys.append(lambda strat: strat.dists["zmin"])
+            case "xmax":
+                if axis == 1:
+                    raise ValueError("Z axis only but sortby was xmax!")
+                sort_keys.append(lambda strat: strat.dists["xmax"])
+            case "zmax":
+                if axis == 0:
+                    raise ValueError("X axis only but sortby was zmax!")
+                sort_keys.append(lambda strat: strat.dists["zmax"])
+            case "n":
+                sort_keys.append(lambda strat: strat.count_of_taps())
+            case _:
+                raise ValueError("sortby contained an unrecognized string!")
 
 
     #----------------------------------------------------------------------------------------------------#
@@ -141,8 +155,13 @@ def find_tap_strats(params):
         parts = (taps, offset, dists, facings, goal)
         output = " ".join(parts)
         return output
+    
+    print(tap_strats[0].dists)
+    print(sort_keys[0](tap_strats[0]))
+    print(tap_strats[0].dists["zmin"])
+    for sort_key in reversed(sort_keys):
+        tap_strats.sort(key=sort_key)
 
-    tap_strats.sort(key=sort_key)
     full_end = perf_counter()
     print(f"Overhead was {full_end - full_start - (inner_end - inner_start)}s")
     print(f"Full internal run took time {full_end - full_start}s")

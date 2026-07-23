@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget, QComboBox, QShort
 import os, json
 
 from TapBruteForcer.main import find_tap_strats
-from TapBruteForcer.parser import get_new_params, get_bf_text
+from TapBruteForcer.parser import get_new_params, get_bf_text, replace_with_defaults
 import TapBruteForcer.helper as helper
 
 import traceback
@@ -109,36 +109,36 @@ class SimulationSection(Cell):
             self.init_taps_button.clicked.connect(self.init_taps)
             tophlayout.addWidget(self.init_taps_button)
 
-            self.tap_params = {
-                "active" : False,
-                "current_partition_line" : 3,
+            self.tap_params = replace_with_defaults({
+                "active" : "...",
+                "current_partition_line" : "...",
 
-                "goal_type" : "mothball",
-                "axis" : "XZ",
+                "goal_type" : "...",
+                "axis" : "...",
                 "mothball" : "...",
 
-                "n" : 5,
-                "f" : "0",
-                "do_frange" : False,
+                "n" : "...",
+                "f" : "...",
+                "do_frange" : "...",
                 "fstart" : "...",
                 "fend" : "...",
                 "fstep" : "...",
-                "fsteps" : 0,
-                "xmin" : float("-inf"),
-                "xmax" : float("inf"),
-                "zmin" : float("-inf"),
-                "zmax" : float("inf"),
-                "xtarget" : 0,
-                "xerror" : float("inf"),
-                "ztarget" : 0,
-                "zerror" : float("inf"),
-                "packages" : "std",
+                "fsteps" : "...",
+                "xmin" : "...",
+                "xmax" : "...",
+                "zmin" : "...",
+                "zmax" : "...",
+                "xtarget" : "...",
+                "xerror" : "...",
+                "ztarget" : "...",
+                "zerror" : "...",
+                "packages" : "...",
                 "corners" : "...",
-                "sortby" : "zmin",
-                "version" : "1.8",
-                "dp" : 4,
-                "slip" : "0.6",
-            }
+                "sortby" : "...n",
+                "version" : "...",
+                "dp" : "...",
+                "slip" : "...",
+            })
         else:
             self.tap_params = {"active" : False}
 

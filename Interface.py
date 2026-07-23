@@ -11,6 +11,7 @@ def mothball(input_str):
     return p.output
 
 def mothball_fetch_XZ_as_tap(base_input_str, air, sim_params, ground):
+    assert base_input_str != "", "Didn't receive a string!"
     satisfied = True
 
     if air:
@@ -24,13 +25,17 @@ def mothball_fetch_XZ_as_tap(base_input_str, air, sim_params, ground):
 
     version = sim_params["version"]
     facing = sim_params["f"]
-    slip = sim_params["slip"]
+    slip = None
+    try:
+        slip = float(sim_params["slip"])
+    except:
+        ValueError(f"Value {sim_params['slip']} for slip is not valid!")
 
     offset = []
     if sim_params["do_frange"]:
         start, end, step = float(sim_params["fstart"]), float(sim_params["fend"]), float(sim_params["fstep"])
 
-        input_str = f"pre(16) version(\"{version}\") sndel(false) slip({slip})"
+        input_str = f"pre(16) version(\"{version}\") sndel(false) slip({slip}) "
         for facing in start + step * np.arange(math.ceil((end - start) / step) + 1):
             input_str += f"f({facing}) " + base_input_str + " outx outz outvx outvz"
             input_str += " || "

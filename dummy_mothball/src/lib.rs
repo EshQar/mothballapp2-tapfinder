@@ -40,4 +40,10 @@ mod dummy_mothball {
         sim_player.simulate(sequence, return_defaults, index_locals, suppress_exception);
         return sim_player.return_output()
     }
+    use crate::expr_eval;
+    #[pyfunction]
+    fn expression_eval(expr: &str, vars: HashMap<String, parser::Data>) -> f64 {
+        let index_locals = hashmap_to_indexmap(vars);
+        expr_eval::evaluate(expr, index_locals)
+    }
 }

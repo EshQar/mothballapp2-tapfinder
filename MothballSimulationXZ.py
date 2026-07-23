@@ -1840,9 +1840,15 @@ if __name__ == "__main__": # script to generate the rust code automatically inst
                 else:
                     raise ValueError(f"{type(argument[2]).__name__}")
                 if argument[3] is None:
-                    argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}), {str(is_required).lower()})")
+                    if kind == "KeywordOnly":
+                        argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}))")
+                    else:
+                        argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}), {str(is_required).lower()})")
                 else:
-                    argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::HasValue(DataType::{arg_type}, {arg_val}), {str(is_required).lower()})")
+                    if kind == "KeywordOnly":
+                        argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::HasValue(DataType::{arg_type}, {arg_val}))")
+                    else:
+                        argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::HasValue(DataType::{arg_type}, {arg_val}), {str(is_required).lower()})")
             else:
                 is_required = True
                 if argument[2] == float:
@@ -1866,9 +1872,12 @@ if __name__ == "__main__": # script to generate the rust code automatically inst
                     print("thing", argument[2])
                     raise ValueError(f"{argument[2].__name__}")
 
-                argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}), {str(is_required).lower()})")
+                if kind == "KeywordOnly":
+                    argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}))")
+                else:
+                    argument_strings.append(f"Argument::{kind}(\"{arg_name}\".to_string(), ArgumentValue::Empty(DataType::{arg_type}), {str(is_required).lower()})")
 
-        strings.append("\n\t\t" + f"funcs.push(({id}, Function::{FUNCTION_ENUMS[keys_to_value[0]]}(FunctionData::new({id}, \"{name}\".to_string(), vec![{'.to_string(), '.join(keys_to_value_names)}.to_string()], vec![{', '.join(argument_strings)}]))));")
+        strings.append("\n\t\t" + f"funcs.push(({id}, Function::{FUNCTION_ENUMS[keys_to_value[0]]}(FunctionData::new(\"{name}\".to_string(), vec![{'.to_string(), '.join(keys_to_value_names)}.to_string()], vec![{', '.join(argument_strings)}]))));")
     
     print(f"{''.join(strings)}")
     print("\n\n")

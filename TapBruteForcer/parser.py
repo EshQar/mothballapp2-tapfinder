@@ -5,6 +5,47 @@ import numpy as np
 import math
 from ExprEval import evaluate
 
+def replace_with_defaults(params: dict):
+    default_params = {
+        "active" : False,
+        "current_partition_line" : 3,
+
+        "goal_type" : "mothball",
+        "axis" : "XZ",
+        "mothball" : "...",
+
+        "n" : 5,
+        "f" : "0",
+        "do_frange" : False,
+        "fstart" : "...",
+        "fend" : "...",
+        "fstep" : "...",
+        "fsteps" : 0,
+        "xmin" : float("-inf"),
+        "xmax" : float("inf"),
+        "zmin" : float("-inf"),
+        "zmax" : float("inf"),
+        "xtarget" : 0,
+        "xerror" : float("inf"),
+        "ztarget" : 0,
+        "zerror" : float("inf"),
+        "packages" : "std",
+        "corners" : "...",
+        "sortby" : "zmin",
+        "version" : "1.8",
+        "dp" : 4,
+        "slip" : "0.6",
+    }
+
+    if params.keys() != default_params.keys():
+        raise ValueError("Unmatched keys!")
+
+    for key in params.keys():
+        if params[key] == "...":
+            params[key] = default_params[key]
+
+    return params
+
 def get_new_params(curr_params, curr_text, strict=True):
     param_names = {
         "Max taps" : "n",

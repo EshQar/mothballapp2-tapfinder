@@ -96,7 +96,6 @@ class TapStrat():
             self.facings = None
 
     def count_of_taps(self):
-        print(sum(map(abs, chain.from_iterable(self.weights))))
         return sum(map(abs, chain.from_iterable(self.weights)))
     
     def __str__(self):

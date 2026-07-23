@@ -763,7 +763,9 @@ pub fn check_types(
     let mut positional_or_keyword: IndexMap<&String, &functions::ArgumentValue> = IndexMap::new();
     let mut keyword_only: IndexMap<&String, &functions::ArgumentValue> = IndexMap::new();
     let mut var_positional: IndexMap<&String, &functions::ArgumentValue> = IndexMap::new();
+
     let mut required_positionals: IndexMap<&String, &functions::ArgumentValue> = IndexMap::new();
+    let mut required_positional_or_keywords: IndexMap<&String, &functions::ArgumentValue> = IndexMap::new();
 
     for arg in func.arguments().iter() {
         match arg {
@@ -775,9 +777,23 @@ pub fn check_types(
                     positional_only.insert(name, value);
                 }
             },
-            functions::Argument::PositionalOrKeyword(name, value, _) => { positional_or_keyword.insert(name, value); },
-            functions::Argument::KeywordOnly(name, value, _) => { keyword_only.insert(name, value); },
-            functions::Argument::VarPositional(name, value, _) => { var_positional.insert(name, value); },
+            functions::Argument::PositionalOrKeyword(name, value, is_required) => {
+                if *is_required {
+                    positional_or_keyword.insert(name, value);
+                    required_positional_or_keywords.insert(name, value);
+                } else {
+                    positional_or_keyword.insert(name, value);
+                }
+            },
+            functions::Argument::KeywordOnly(name, value) => { keyword_only.insert(name, value); },
+            functions::Argument::VarPositional(name, value, is_required) => {
+                if *is_required {
+                    var_positional.insert(name, value);
+                    required_positionals.insert(name, value);
+                } else {
+                    var_positional.insert(name, value);
+                }
+            },
         }
     }
 
@@ -793,6 +809,14 @@ pub fn check_types(
             if number_of_missing > 1 { "s" } else { "" },
             required_positionals.keys().skip(args.len()).map(|key| String::as_str(*key)).collect::<Vec<_>>().join(", ")
         )));
+    } else if required_positionals.len() + required_positional_or_keywords.len() > args.len() {
+        let number_of_gotten_optionals = args.len() - required_positionals.len();
+
+        for key in required_positional_or_keywords.keys().skip(number_of_gotten_optionals) {
+            if !kwargs.contains_key(*key) {
+                return Err(errors::RuntimeError::TypeError(format!("Missing required positional_or_keyword arg {}!", key)));
+            }
+        }
     }
 
     for i in 0..std::cmp::min(args.len(), can_be_positional.len()) {

@@ -18,7 +18,7 @@ enum TokenKind {
     Comma,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Token {
     Number(f64),
     Plus,
@@ -49,13 +49,7 @@ impl Token {
     }
 }
 
-#[derive(Hash, Eq, PartialEq, Clone, Debug)]
-enum Identity {
-    Variable(String),
-    Function(fn(Vec<f64>) -> f64),
-}
-
-#[derive(Hash, Eq, PartialEq, Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Clone, Copy, Debug)]
 enum Operator {
     Plus,
     Minus,
@@ -64,56 +58,42 @@ enum Operator {
     Times,
     Divide,
     Lparen,
-    Id(Identity),
+    Function(Function),
 }
 
-use std::fmt;
-
-impl fmt::Display for Operator {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Operator::Plus => write!(f, "+"),
-            Operator::Minus => write!(f, "-"),
-            Operator::UnaryMinus => write!(f, "unary -"),
-            Operator::Pow => write!(f, "**"),
-            Operator::Times => write!(f, "*"),
-            Operator::Divide => write!(f, "/"),
-            Operator::Lparen => write!(f, "("),
-            Operator::Id(_) => write!(f, "id"),
-        }
-    }
+#[derive(Hash, Eq, PartialEq, Clone, Copy, Debug)]
+enum Function {
+    Abs,
+    Min,
+    Max,
 }
 
-impl fmt::Display for Token {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Function {
+    fn run_func(&self, floats: Vec<f64>) -> f64 {
         match self {
-            Token::Plus => write!(f, "+"),
-            Token::Minus => write!(f, "-"),
-            Token::Pow => write!(f, "**"),
-            Token::Times => write!(f, "*"),
-            Token::Divide => write!(f, "/"),
-            Token::Lparen => write!(f, "("),
-            Token::Id(_) => write!(f, "id"),
-            Token::Comma => write!(f, ","),
-            Token::Rparen => write!(f, ")"),
-            Token::Number(_) => write!(f, "ﬂoat"),
-        }
-    }
-}
+            Function::Abs => { return floats[0].abs() },
+            Function::Min => {
+                let min_value = floats
+                    .iter()
+                    .copied()
+                    .reduce(f64::min);
 
-impl fmt::Display for TokenKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            TokenKind::Plus => write!(f, "+"),
-            TokenKind::Minus => write!(f, "-"),
-            TokenKind::Pow => write!(f, "**"),
-            TokenKind::Times => write!(f, "*"),
-            TokenKind::Divide => write!(f, "/"),
-            TokenKind::Lparen => write!(f, "("),
-            TokenKind::Id => write!(f, "id"),
-            TokenKind::Comma => write!(f, ","),
-            TokenKind::Rparen => write!(f, ")"),
-            TokenKind::Number => write!(f, "ﬂoat"),
+                match min_value {
+                    Some(min) => {min}
+                    None => panic!("Min function received something unexpected!")
+                }
+            },
+            Function::Max => {
+                let max_value = floats
+                    .iter()
+                    .copied()
+                    .reduce(f64::max);
+
+                match max_value {
+                    Some(max) => {max}
+                    None => panic!("Min function received something unexpected!")
+                }
+            }
         }
     }
 }
@@ -222,6 +202,7 @@ fn _tokenize(expression: &str) -> Vec<Token> {
 
 
 fn _apply_operator(operands: &mut Vec<f64>, operator: Operator) {
+//    println!("applying {:?} on operands {:?}", operator, operands);
     if matches!(operator, Operator::UnaryMinus)  {
         if operands.is_empty() {
             panic!("Invalid expression");
@@ -229,6 +210,7 @@ fn _apply_operator(operands: &mut Vec<f64>, operator: Operator) {
 
         let a = operands.pop().unwrap();
         operands.push(-a);
+        return
     }
 
     if operands.len() <= 1 {
@@ -255,38 +237,10 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
     use crate::expr_eval::Token::{Number, Id, Minus, Plus, Times, Divide, Pow, Lparen, Rparen, Comma};
     // println!("{:?}", tokens);
 
-    fn abs(floats: Vec<f64>) -> f64 {
-        return floats[0].abs()
-    }
-
-    fn min(floats: Vec<f64>) -> f64 {
-        let min_value = floats
-            .iter()
-            .copied()
-            .reduce(f64::min);
-
-        match min_value {
-            Some(min) => {min}
-            None => panic!("Min function received something unexpected!")
-        }
-    }
-
-    fn max(floats: Vec<f64>) -> f64 {
-        let max_value = floats
-            .iter()
-            .copied()
-            .reduce(f64::max);
-
-        match max_value {
-            Some(max) => {max}
-            None => panic!("Max function received something unexpected!")
-        }
-    }
-
-    let functions: HashMap<&'static str, Identity> = HashMap::from([
-        ("abs", Identity::Function(abs)),
-        ("max", Identity::Function(max)),
-        ("min", Identity::Function(min)),
+    let functions: HashMap<&'static str, Function> = HashMap::from([
+        ("abs", Function::Abs),
+        ("max", Function::Max),
+        ("min", Function::Min),
     ]);
 
     let mut precedence: HashMap<Operator, usize> = HashMap::new();
@@ -307,6 +261,8 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
 
     for token in tokens {
         let kind = token.kind();
+   //     println!("{:?}", token);
+  //      println!("operands {:?} operators {:?}", operands, operators);
         match token {
             Number(float) => {
                 operands.push(float)
@@ -315,7 +271,7 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
             Id(name) => {
                 if functions.contains_key(name.as_str()) {
                     argument_counts.push(1);
-                    operators.push(Operator::Id(functions[name.as_str()].clone()));
+                    operators.push(Operator::Function(functions[name.as_str()]));
                 } else if variables.contains_key(&name) {
                     operands.push(variables[&name].clone().get_as_f64());
                 } else {
@@ -411,18 +367,19 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
                     _apply_operator(&mut operands, operators.pop().unwrap());
                 }
 
+ //               println!("popping {:?}", operators.last());
                 operators.pop();
 
-                let last = operators.last().unwrap().clone();
-                if !operators.is_empty() && let Operator::Id(Identity::Function(func)) = operators.pop().unwrap() {
+                if let Some(Operator::Function(func)) = operators.last() {
+                    let func = *func;
+                    operators.pop();
+
                     let nargs = argument_counts.pop().unwrap();
                     let args = operands[operands.len() - nargs..].to_vec();
 
                     operands.truncate(operands.len() - nargs);
 
-                    operands.push(func(args));
-                } else {
-                    operators.push(last);
+                    operands.push(func.run_func(args));
                 }
             }
 
@@ -443,15 +400,21 @@ fn _evaluate(tokens: Vec<Token>, variables: IndexMap<String, Data>) -> f64 {
 //        prevvalue = Some(value);
     }
 
-
+//    println!("\nout of loop");
     while !operators.is_empty() {
+  //      println!("operators after {:?} operands after {:?}", operators, operands);
         _apply_operator(&mut operands, operators.pop().unwrap());
+    }
+
+    if operands.len() != 1 {
+        panic!("Operands had the wrong end length!")
     }
 
     operands[0].clone()
 }
 
 pub fn evaluate(expression: &str, variables: IndexMap<String, Data>) -> f64 {
+//    println!("{}", expression);
     if expression.is_empty() {
         return 0.into();
     }

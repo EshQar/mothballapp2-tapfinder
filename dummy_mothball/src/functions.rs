@@ -158,7 +158,7 @@ impl ArgumentValue {
 pub enum Argument {
     PositionalOnly(String, ArgumentValue, bool),
     PositionalOrKeyword(String, ArgumentValue, bool),
-    KeywordOnly(String, ArgumentValue, bool),
+    KeywordOnly(String, ArgumentValue),
     VarPositional(String, ArgumentValue, bool),
 }
 
@@ -167,7 +167,7 @@ impl Argument {
         match self {
             Argument::PositionalOnly(name, _, _) => name,
             Argument::PositionalOrKeyword(name, _, _) => name,
-            Argument::KeywordOnly(name, _, _) => name,
+            Argument::KeywordOnly(name, _) => name,
             Argument::VarPositional(name, _, _) => name,
         }
     }
@@ -176,7 +176,7 @@ impl Argument {
         match self {
             Argument::PositionalOnly(_, value, _) => value,
             Argument::PositionalOrKeyword(_, value, _) => value,
-            Argument::KeywordOnly(_, value, _) => value,
+            Argument::KeywordOnly(_, value) => value,
             Argument::VarPositional(_, value, _) => value,
         }
     }
@@ -194,15 +194,14 @@ pub fn argument_from_data(data: Data) -> FullArgumentValue {
 
 #[derive(Clone, Debug)]
 pub struct FunctionData {
-    pub id: i32,
     pub common_name: String,
     pub aliases: Vec<String>,
     pub arguments: Vec<Argument>,
 }
     
 impl FunctionData {
-    pub fn new(id: i32, common_name: String, aliases: Vec<String>, arguments: Vec<Argument>) -> Self {
-        Self { id, common_name, aliases, arguments }
+    pub fn new(common_name: String, aliases: Vec<String>, arguments: Vec<Argument>) -> Self {
+        Self { common_name, aliases, arguments }
     }
 }
 
@@ -332,7 +331,7 @@ impl Function {
             match function_argument {
                 Argument::PositionalOnly(_, _, _) => { reorganized_args.push(passed_argument) }
                 Argument::PositionalOrKeyword(_, _, _) => reorganized_args.push(passed_argument),
-                Argument::KeywordOnly(_, _, _) =>  panic!(),
+                Argument::KeywordOnly(_, _) =>  panic!(),
                 Argument::VarPositional(_, _, _) => reorganized_args.push(passed_argument),
             }
         }

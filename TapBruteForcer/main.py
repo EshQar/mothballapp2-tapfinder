@@ -1,13 +1,15 @@
 from TapBruteForcer.tap_packer import packer
 from brute_forcer import brute_force
 from TapBruteForcer.tap import TapStrat
-from TapBruteForcer.parser import xz_get_goals, single_axis_get_goals
+from TapBruteForcer.parser import xz_get_goals, single_axis_get_goals, replace_with_defaults
 import TapBruteForcer.helper as helper
 import math
 from time import perf_counter
 
 def find_tap_strats(params):
     full_start = perf_counter()
+    params = replace_with_defaults(params)
+
     for key in params.keys():
         if params[key] == "...":
             params[key] = None
@@ -17,6 +19,10 @@ def find_tap_strats(params):
     assert not params["n"] is None and 0 < int(params["n"]), "Max taps must be a nonzero positive integer!"
     assert 0 < int(params["dp"]), "dp must be a nonzero positive integer!"
     assert not params["packages"] is None , "Packages cannot be empty!"
+    try:
+        float(params["slip"])
+    except:
+        raise ValueError(f"Value {params['slip']} for slip is not valid!")
 
     n = int(params["n"])
     dp = int(params["dp"])
@@ -80,7 +86,6 @@ def find_tap_strats(params):
 
     sort_keys = []
     for sortby in params["sortby"].split():
-        print("key", sortby)
         match sortby:
             case None:
                 if axis != 1:
@@ -156,9 +161,6 @@ def find_tap_strats(params):
         output = " ".join(parts)
         return output
     
-    print(tap_strats[0].dists)
-    print(sort_keys[0](tap_strats[0]))
-    print(tap_strats[0].dists["zmin"])
     for sort_key in reversed(sort_keys):
         tap_strats.sort(key=sort_key)
 

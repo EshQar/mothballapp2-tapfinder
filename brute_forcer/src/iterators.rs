@@ -1,3 +1,5 @@
+
+
 pub struct MaxCountIter {
     max_counts: Vec<usize>,
     n: usize,
@@ -107,8 +109,10 @@ impl WeakCompositions {
             sum,
         }
     }
+}
 
-    pub fn advance(&mut self) -> bool {
+impl WeightIterable for WeakCompositions {
+    fn advance(&mut self) -> bool {
         let k = self.parts;
 
         if k == 1 {
@@ -142,7 +146,7 @@ impl WeakCompositions {
         }
     }
     
-    pub fn reset(&mut self) {
+    fn reset(&mut self) {
         let mut start: Vec<isize> = vec![0; self.parts];
         start[0] = self.sum;
 
@@ -150,8 +154,13 @@ impl WeakCompositions {
         self.finished = false;
     }
 
-    pub fn current(&self) -> &[isize] {
+    fn current(&self) -> &[isize] {
         &self.current
+    }
+
+    fn set_new_sum(&mut self, sum: isize) {
+        self.sum = sum;
+        self.reset();
     }
 }
 
@@ -186,8 +195,10 @@ impl SignedCompositions {
             }
         }
     }
+}
 
-    pub fn advance(&mut self) -> bool {
+impl WeightIterable for SignedCompositions {
+    fn advance(&mut self) -> bool {
         if !self.advance_sign() {
             return false
         } else if !self.base.advance() {
@@ -197,12 +208,59 @@ impl SignedCompositions {
         }
     }
 
-    pub fn reset(&mut self) {
+    fn reset(&mut self) {
         self.base.reset();
         self.pivot = 0;
     }
 
-    pub fn current(&self) -> &[isize] {
+    fn current(&self) -> &[isize] {
         return self.base.current()
+    }
+
+    fn set_new_sum(&mut self, sum: isize) {
+        self.base.sum = sum;
+        self.reset();
+    }
+}
+
+pub trait WeightIterable {
+    fn advance(&mut self) -> bool;
+    fn reset(&mut self);
+    fn current(&self) -> &[isize];
+    fn set_new_sum(&mut self, sum: isize);
+}
+
+pub enum WeightIterator {
+    Reversible(SignedCompositions),
+    Irreversible(WeakCompositions),
+}
+
+impl WeightIterable for WeightIterator {
+    fn advance(&mut self) -> bool {
+        match self {
+            WeightIterator::Reversible(it) => it.advance(),
+            WeightIterator::Irreversible(it) => it.advance(),
+        }
+    }
+
+    fn reset(&mut self) {
+        match self {
+            WeightIterator::Reversible(it) => it.reset(),
+            WeightIterator::Irreversible(it) => it.reset(),
+        }
+    }
+
+    fn current(&self) -> &[isize] {
+        match self {
+            WeightIterator::Reversible(it) => it.current(),
+            WeightIterator::Irreversible(it) => it.current(),
+        }
+    }
+
+    fn set_new_sum(&mut self, sum: isize) {
+        match self {
+            WeightIterator::Reversible(it) => it.set_new_sum(sum),
+            WeightIterator::Irreversible(it) => it.set_new_sum(sum),
+        }
     }
 }

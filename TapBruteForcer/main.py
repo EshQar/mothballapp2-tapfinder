@@ -116,18 +116,18 @@ def find_tap_strats(params):
 
     #----------------------------------------------------------------------------------------------------#
 
-
     assert 0 < n, "Required: Max taps > 0"
     assert isinstance(n, int)
     assert all((count >= 0) for count in max_counts), "Invalid max_counts or is_reversible"
     assert sum(max_counts) >= n, "The sum of max counts cannot be less than n"
     try:
         inner_start = perf_counter()
-        strats = brute_force(n, max_counts, pools_offset, is_reversible, goals, axis, fstart, fstep, fsteps)
+        strats = brute_force(n, max_counts, pools_offset, is_reversible, goals, axis)
         inner_end = perf_counter()
         print(f"Brute force took time {inner_end - inner_start}s")
     except BaseException as e:
         raise RuntimeError(f"The brute-forcer encountered an error: {e}")
+
     tap_strats = [TapStrat(*strat, params) for strat in strats]
     TapStrat.pools = pools
 

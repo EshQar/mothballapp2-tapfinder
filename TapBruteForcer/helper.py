@@ -378,5 +378,12 @@ def get_zero_offset(params):
 
     return zero_offset
 
+def facing_indices_to_facings(indices, fstart, fstep, fsteps):
+    facings = []
+    for index in indices:
+        facings.append(index * fstep + fstart)
+
+    return facings
+
 if __name__ == "__main__":
     print(remove_spaces_inside_brackets_and_strip_and_lower("v(\"1.21.5\") f(-16) sa.wd(8) s.wd zmm(.125, <0) outx(-.5625, >0) | sj sa.wa(8) outx(.5625, <0) x(0) sa.wa outz(2.4375, >0) sa.wa(2) outx(.4375, >0)", include_chevrons=False))

@@ -69,7 +69,7 @@ class Tap():
 class TapStrat():
     pools = None
 
-    def __init__(self, weights, offset, dists, for_goal, facings, params):
+    def __init__(self, weights, offset, dists, for_goal, facing_indices, params):
         self.weights = weights
 
         axis = params["axis"]
@@ -90,8 +90,10 @@ class TapStrat():
         else:
             self.goal = None
 
-        if facings != None:
-            self.facings = facings_to_string(facings, float(params["fstep"]))
+        if facing_indices != None:
+            fstart, fstep, fsteps = float(params["fstart"]), float(params["fstep"]), int(params["fsteps"])
+            facings = helper.facing_indices_to_facings(facing_indices, fstart, fstep, fsteps)
+            self.facings = facings_to_string(facings, fstep)
         else:
             self.facings = None
 

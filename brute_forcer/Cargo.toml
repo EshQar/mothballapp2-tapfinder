@@ -9,4 +9,9 @@ name = "brute_forcer"
 crate-type = ["cdylib"]
 
 [dependencies]
+itertools = "0.15.0"
 pyo3 = "0.29.0"
+
+[profile.profiling]
+inherits = "release"
+debug = true

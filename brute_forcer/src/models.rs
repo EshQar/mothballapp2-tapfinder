@@ -11,7 +11,7 @@ where
 {
     type Offset: TapOffset;
     fn weight_state(&self) -> Vec<&[isize]>;
-    fn next_offset(&mut self) -> Option<Self::Offset>;
+    fn advance(&mut self) -> bool;
     fn update_max_counts(&mut self, max_counts: Vec<usize>);
     fn offset(&self) -> Self::Offset;
 }
@@ -100,20 +100,20 @@ impl<'a, O: TapOffset> Conglomerate for PoolIteratorConglomerate<'a, O> where fo
         self.iterators.iter().map(|iter| iter.current()).collect()
     }
 
-    fn next_offset(&mut self) -> Option<<PoolIteratorConglomerate<'a, O> as Conglomerate>::Offset> {
+    fn advance(&mut self) -> bool {
         if self.iterators[self.pivot].advance() {
 
             self.iterators[self.pivot].reset();
             self.pivot += 1;
 
             if self.pivot >= self.count_of_pools {
-                return None
+                return true
             }
 
-            self.next_offset()
+            self.advance()
         } else {
             self.pivot = 0;
-            return Some(self.offset())
+            return false
         }
     }
 

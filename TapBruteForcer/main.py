@@ -17,6 +17,7 @@ def find_tap_strats(params):
             raise RuntimeError(f"Found empty param, {key}, but it was not specified as empty by using '...'!")
 
     assert not params["n"] is None and 0 < int(params["n"]), "Max taps must be a nonzero positive integer!"
+    assert not params["n"] is None and 0 < int(params["n"]), "Strat count must be a nonzero positive integer!"
     assert 0 < int(params["dp"]), "dp must be a nonzero positive integer!"
     assert not params["packages"] is None , "Packages cannot be empty!"
     try:
@@ -26,6 +27,7 @@ def find_tap_strats(params):
 
     n = int(params["n"])
     dp = int(params["dp"])
+    strat_count = int(params["strat_count"])
 
     packing_cmd = params["packages"]
     goal_type = params["goal_type"]
@@ -122,7 +124,7 @@ def find_tap_strats(params):
     assert sum(max_counts) >= n, "The sum of max counts cannot be less than n"
     try:
         inner_start = perf_counter()
-        strats = brute_force(n, max_counts, pools_offset, is_reversible, goals, axis)
+        strats = brute_force(n, strat_count, max_counts, pools_offset, is_reversible, goals, axis)
         inner_end = perf_counter()
         print(f"Brute force took time {inner_end - inner_start}s")
     except BaseException as e:

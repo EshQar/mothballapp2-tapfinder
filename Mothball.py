@@ -29,6 +29,8 @@ from version import __version__
 import MacroViewer
 from UndoRedoCell import ActionStack
 
+import traceback
+
 # Reorganize the help page
 # Fix settings
 # Something is wrong with action stack when undoing towards the end
@@ -447,6 +449,8 @@ class MainWindow(QMainWindow):
                     QTimer.singleShot(0,c.adjust_output_height)
                 
             except Exception as e:
+                error_string = traceback.format_exc()
+                print(error_string)
                 print(e)
 
             i += 1

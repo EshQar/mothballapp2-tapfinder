@@ -15,6 +15,7 @@ def replace_with_defaults(params: dict):
         "mothball" : "...",
 
         "n" : 5,
+        "strat_count" : 50,
         "f" : "0",
         "do_frange" : False,
         "fstart" : "...",
@@ -49,6 +50,7 @@ def replace_with_defaults(params: dict):
 def get_new_params(curr_params, curr_text, strict=True):
     param_names = {
         "Max taps" : "n",
+        "Strat count" : "strat_count",
         "Facing" : "f",
         "X min" : "xmin",
         "X max" : "xmax",
@@ -77,6 +79,7 @@ def get_new_params(curr_params, curr_text, strict=True):
 
     expected_params = {
         "n",
+        "strat_count",
         "f",
         "xmin" if (params["axis"] == "X" or params["axis"] == "XZ") and params["goal_type"] == "minmax" else "",
         "zmin" if (params["axis"] == "Z" or params["axis"] == "XZ") and params["goal_type"] == "minmax" else "",
@@ -168,9 +171,9 @@ def get_bf_text(current_text, params):
 
     command = "----------\nBrute force {\n"
 
-    n, f, gt, axis, xmin, zmin, xmax, zmax, xt, xe, zt, ze, pack, corn, sort, ver, dp, slip = params["n"], params["f"], params["goal_type"], params["axis"], params["xmin"], params["zmin"], params["xmax"], params["zmax"], params["xtarget"], params["xerror"], params["ztarget"], params["zerror"], params["packages"], params["corners"], params["sortby"], params["version"], params["dp"], params["slip"]
+    n, strat_count, f, gt, axis, xmin, zmin, xmax, zmax, xt, xe, zt, ze, pack, corn, sort, ver, dp, slip = params["n"], params["strat_count"], params["f"], params["goal_type"], params["axis"], params["xmin"], params["zmin"], params["xmax"], params["zmax"], params["xtarget"], params["xerror"], params["ztarget"], params["zerror"], params["packages"], params["corners"], params["sortby"], params["version"], params["dp"], params["slip"]
 
-    args1 = f"Max taps: {n}\nFacing: {f}\n"
+    args1 = f"Max taps: {n}\nStrat count: {strat_count}\nFacing: {f}\n"
     args2 = ""
     if gt == "mothball":
         pass

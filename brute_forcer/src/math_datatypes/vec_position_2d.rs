@@ -30,7 +30,7 @@ impl Mul<f32> for VecPosition2D {
     type Output = VecPosition2D;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        VecPosition2D(self.0.iter().map(|pos| *pos * rhs).collect())
+        VecPosition2D(self.0.into_iter().map(|pos| pos * rhs).collect())
     }
 }
 

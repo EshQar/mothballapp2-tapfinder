@@ -118,6 +118,7 @@ class SimulationSection(Cell):
                 "mothball" : "...",
 
                 "n" : "...",
+                "strat_count" : "...",
                 "f" : "...",
                 "do_frange" : "...",
                 "fstart" : "...",
@@ -134,7 +135,7 @@ class SimulationSection(Cell):
                 "zerror" : "...",
                 "packages" : "...",
                 "corners" : "...",
-                "sortby" : "...n",
+                "sortby" : "...",
                 "version" : "...",
                 "dp" : "...",
                 "slip" : "...",
@@ -442,6 +443,10 @@ class SimulationSection(Cell):
         self.output_field.renderTextfromOutput(self.linter, data['raw_output'])
         self.raw_output = data['raw_output']
         for key in self.tap_params.keys():
+            if key not in data['tap_params'].keys():
+                print(f"{key} missing")
+                data['tap_params'][key] = self.tap_params[key]
+
             if (not data['tap_params'][key] == None) and (not data['tap_params'][key] == ""):
                 self.tap_params[key] = data['tap_params'][key]
 

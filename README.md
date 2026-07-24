@@ -31,6 +31,10 @@ The brute-forcer expects every available parameter to be given. If you want to l
 
     The maximum amount taps a valid tap strat should have.
 
+1.
+    ### Strat count
+
+    The maximum amount of strats the brute-forcer will search for.
     
 1.
     ### Facing
@@ -67,15 +71,16 @@ The brute-forcer expects every available parameter to be given. If you want to l
 | Parameter | Internal alias | Special Constraints | Default value
 |:-----|:-----:|:------------:|:------------:|
 | Max taps | `n` | Must be a nonzero positive integer | `5` |
-| Facing | `f` | none | `0` |
-| Facing range start | `fstart` | Must be less than `fend`, goal type must be `mothball` | `0` |
-| Facing range end | `fend` | Must be greater than `fstart`, goal type must be `mothball` | `0` |
+| Strat count | `strat_count` | Must be a nonzero positive integer | `50` |
+| Facing | `f` | None | `0` |
+| Facing range start | `fstart` | Must be less than `fend` and goal type must be `mothball` | `0` |
+| Facing range end | `fend` | Must be greater than `fstart` and goal type must be `mothball` | `0` |
 | Facing range step | `fstep` | Goal type must be `mothball` | `0.05` |
 | Packages | `packages` | Cannot be omitted by `...` | `""` |
-| Corners | `corners` | none | `""` |
-| Sorting type | `sortby` | none | `xmin` |
-| Version | `version` | none | `1.8` |
-| slip | `slip` | none | `0.6` |
+| Corners | `corners` | None | `""` |
+| Sorting type | `sortby` | None | `xmin` |
+| Version | `version` | None | `1.8` |
+| slip | `slip` | None | `0.6` |
 > Parameters being parseable is not considered a special constraint, i.e. float parameters must be parseable as floats etc. This should be assumed for every parameter.
 
 

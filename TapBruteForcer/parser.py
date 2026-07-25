@@ -20,7 +20,7 @@ def replace_with_defaults(params: dict):
         "do_frange" : False,
         "fstart" : "...",
         "fend" : "...",
-        "fstep" : "...",
+        "fstep" : "0.05",
         "fsteps" : 0,
         "xmin" : float("-inf"),
         "xmax" : float("inf"),

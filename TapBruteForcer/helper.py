@@ -124,8 +124,8 @@ def check_mothball_cmd_for_ref_compatibility(mothball_cmd, axis):
     zpos_output_cmds = {"outz", "zmm", "zb"}
     ignorable_cmds = {"print", "outvz", "outvx", "vec"}
 
-    e1 = SyntaxError("Incorrect syntax: have you made sure all | or z() or x() are preceded by corresponding output commands with reference points?")
-    e2 = SyntaxError("Error while processing constraints: have you made sure | or z() or x() is preceded by corresponding output commands with reference points?")
+    e1 = SyntaxError("Incorrect syntax: have you made sure all | or z() or x() are preceded by corresponding output commands with reference points? Perhaps you meant to use x!, z!, ! or !! instead.")
+    e2 = SyntaxError("Error while processing constraints: have you made sure | or z() or x() is preceded by corresponding output commands with reference points? Perhaps you meant to use x!, z!, ! or !! instead.")
     try:
         wants_xref, wants_zref = False, False
         while split_mothball_cmd != []:

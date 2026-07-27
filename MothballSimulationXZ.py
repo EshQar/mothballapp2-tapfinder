@@ -1,5 +1,6 @@
 from math import sin, cos, atan2 as arctan, sqrt, copysign, degrees as deg, asin
 from numpy import float32 as f32, uint64 as u64, int32 as i32
+import numpy as np
 from typing import Literal
 from BaseMothballSimulation import BasePlayer, MothballSequence
 from BaseMothballSimulation import NameString

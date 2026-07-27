@@ -414,8 +414,8 @@ pub fn parse(
     let mut follows_slash = false;
     let mut in_string = false;
 
-    string = string.replace(" || ", " x(0) z(0) vx(0) vz(0) ");
-    string = string.replace(" | ", " x(0) z(0) ");
+    string = string.replace("||", "x(0) z(0) vx(0) vz(0)");
+    string = string.replace("|", "x(0) z(0)");
 
     let mut chars: Vec<char> = string.chars().collect();
     chars.push(splitters[0]);

@@ -1,9 +1,12 @@
 use pyo3::prelude::*;
 
 mod models;
-mod math_datatypes;
-
+mod goals;
+mod position;
+mod wall_and_edges;
 mod iterators;
+mod brute_force;
+mod conglomerate;
 
 #[pymodule]
 mod brute_forcer {
@@ -12,57 +15,11 @@ use pyo3::prelude::*;
     use pyo3::FromPyObject;
     use std::ops::Mul;
 
-    use crate::math_datatypes::vec_position_2d::VecPosition2D;
-    use crate::math_datatypes::position_2d::Position2D;
-    use crate::models::SingleAxisGoal;
-    use crate::models::{MultiAxisGoal, PoolIteratorConglomerate, Conglomerate, Goal, MultiaxisRotationGoal, XRotationGoal, ZRotationGoal};
+    use crate::brute_force::{no_facing_bf, facing_bf};
+    use crate::position::Position2D;
+    use crate::goals::{MultiAxisGoal, MultiAxisRotationGoal, SingleAxisGoal, XRotationGoal, ZRotationGoal};
+    use crate::conglomerate::{NoRotationPoolIteratorConglomerate, RotationPoolIteratorConglomerate, Conglomerate};
     use crate::iterators::MaxCountIter;
-
-    pub fn bf<C, G>(
-        n: usize,
-        strat_count: usize,
-        max_counts: Vec<usize>,
-        conglomerate: &mut C,
-        mut goals: Vec<G>,
-    ) -> (Vec<Vec<Vec<Vec<isize>>>>, Vec<Vec<C::Offset>>, Vec<Vec<G::Dist>>, Vec<Vec<Vec<usize>>>)
-    where
-        C: Conglomerate,
-        G: Goal<C::Offset>, for<'a> &'a <C as Conglomerate>::Offset: Mul<f32, Output= C::Offset>, 
-//        <C as Conglomerate>::Offset: std::fmt::Debug
-    {
-        let len_goals = goals.len();
-        let mut successes = vec![Vec::new(); len_goals];
-        let mut strat_offsets: Vec<Vec<C::Offset>> = vec![Vec::new(); len_goals];
-        let mut dists: Vec<Vec<G::Dist>> = (0..len_goals).map(|_| Vec::new()).collect();
-        let mut facings: Vec<Vec<Vec<usize>>> = vec![Vec::new(); len_goals];
-        let mut found_strats = 0_usize;
-
-        'outer: for counts in MaxCountIter::new(max_counts, n) {
-            conglomerate.update_max_counts(counts);
-            loop {
-                let curr_offset = conglomerate.offset();
-                for (i, goal) in goals.iter_mut().enumerate() {
-                    if goal.is_satisfied(&curr_offset) {
-                        successes[i].push(conglomerate.weight_state().iter().map(|s| s.to_vec()).collect());
-                        dists[i].push(goal.get_dists(&curr_offset));
-                        
-                        strat_offsets[i].push(curr_offset.clone());
-                        facings[i].push(goal.facings());
-
-                        found_strats += 1;
-                        if strat_count <= found_strats {
-                            break 'outer;
-                        }
-                    }
-                }
-
-                if conglomerate.advance() {
-                    break;
-                }
-            }
-        }
-        (successes, strat_offsets, dists, facings)
-    }
 
     #[derive(FromPyObject)]
     enum PoolInput {
@@ -100,7 +57,7 @@ use pyo3::prelude::*;
                                 ).collect()
                             ).collect();
 
-                        let output = bf(n, strat_count, max_counts, &mut PoolIteratorConglomerate::new(&pools, &is_reversible), goals);
+                        let output = no_facing_bf(n, strat_count, max_counts, NoRotationPoolIteratorConglomerate::new(&pools, &is_reversible), goals);
                         let mut sanitized_output = Vec::new();
 
                         for goal_index in 0..output.0.len() {
@@ -133,7 +90,7 @@ use pyo3::prelude::*;
                     }
                     PoolInput::SingleAxisPool(pools) => {
                         let goals: Vec<SingleAxisGoal> = goals_args.into_iter().map(|(start, end)| SingleAxisGoal::new(start, end)).collect();
-                        let output = bf(n, strat_count, max_counts, &mut PoolIteratorConglomerate::new(&pools, &is_reversible), goals);
+                        let output = no_facing_bf(n, strat_count, max_counts, NoRotationPoolIteratorConglomerate::new(&pools, &is_reversible), goals);
                         let mut sanitized_output = Vec::new();
 
                         for goal_index in 0..output.0.len() {
@@ -165,25 +122,23 @@ use pyo3::prelude::*;
                         panic!("Rotation goal but non-rotation pool!")
                     }
                     PoolInput::RotationPool(pools) => {
-                        let goals: Vec<MultiaxisRotationGoal> = goals_args.into_iter().map(|args| MultiaxisRotationGoal::new(args)).collect();
+                        let goals: Vec<MultiAxisRotationGoal> = goals_args.into_iter().map(|args| MultiAxisRotationGoal::new(args)).collect();
                         let pools 
                         = pools.into_iter().map(
                             |pool| 
                             pool.into_iter().map(
-                                |offset| VecPosition2D(offset.into_iter().map(|pos| Position2D {x: pos.0, z: pos.1 }).collect())
+                                |offset| offset.into_iter().map(|pos| Position2D {x: pos.0, z: pos.1 }).collect()
                                 ).collect()
                             ).collect();
 
-                        let output = bf(n, strat_count, max_counts, &mut PoolIteratorConglomerate::new(&pools, &is_reversible), goals);
+                        let output = facing_bf(n, strat_count, max_counts, RotationPoolIteratorConglomerate::new(&pools, &is_reversible), goals);
                         let mut sanitized_output = Vec::new();
 
                         for goal_index in 0..output.0.len() {
                             for i in 0..output.0[goal_index].len() {
-                                let middle_facing_index = output.3[goal_index][i].len() / 2;
-
                                 let weights = output.0[goal_index][i].clone();
-                                let offset = (Some(output.1[goal_index][i].0[middle_facing_index].x), Some(output.1[goal_index][i].0[middle_facing_index].z));
-                                let dist = (Some(output.2[goal_index][i][middle_facing_index].0), Some(output.2[goal_index][i][middle_facing_index].1), Some(output.2[goal_index][i][middle_facing_index].2), Some(output.2[goal_index][i][middle_facing_index].3));
+                                let offset = (Some(output.1[goal_index][i].x), Some(output.1[goal_index][i].z));
+                                let dist = (Some(output.2[goal_index][i].0), Some(output.2[goal_index][i].1), Some(output.2[goal_index][i].2), Some(output.2[goal_index][i].3));
                                 let for_goal = Some(goal_index);
                                 let facings = Some(output.3[goal_index][i].clone());
 
@@ -195,7 +150,6 @@ use pyo3::prelude::*;
                     }
                 }
             }
-
             GoalInput::RotationSingleAxisGoal(goals_args) => {
                 match pools {
                     PoolInput::MultiAxisPool(_pools) => {
@@ -209,17 +163,17 @@ use pyo3::prelude::*;
                         = pools.into_iter().map(
                             |pool| 
                             pool.into_iter().map(
-                                |offset| VecPosition2D(offset.into_iter().map(|pos| Position2D {x: pos.0, z: pos.1 }).collect())
+                                |offset| offset.into_iter().map(|pos| Position2D {x: pos.0, z: pos.1 }).collect()
                                 ).collect()
                             ).collect();
 
-                        let output: (Vec<Vec<Vec<Vec<isize>>>>, Vec<Vec<VecPosition2D>>, Vec<Vec<Vec<(f32, f32)>>>, Vec<Vec<Vec<usize>>>);
+                        let output: (Vec<Vec<Vec<Vec<isize>>>>, Vec<Vec<f32>>, Vec<Vec<(f32, f32)>>, Vec<Vec<Vec<usize>>>);
                         if axis == 0 {
                             let goals: Vec<XRotationGoal> = goals_args.into_iter().map(|args| XRotationGoal::new(args)).collect();
-                            output = bf(n, strat_count, max_counts, &mut PoolIteratorConglomerate::new(&pools, &is_reversible), goals);
+                            output = facing_bf(n, strat_count, max_counts, RotationPoolIteratorConglomerate::new(&pools, &is_reversible), goals);
                         } else if axis == 1 {
                             let goals: Vec<ZRotationGoal> = goals_args.into_iter().map(|args| ZRotationGoal::new(args)).collect();
-                            output = bf(n, strat_count, max_counts, &mut PoolIteratorConglomerate::new(&pools, &is_reversible), goals);
+                            output = facing_bf(n, strat_count, max_counts, RotationPoolIteratorConglomerate::new(&pools, &is_reversible), goals);
                         } else {
                             panic!("Axis is SingleAxis, but also MultiAxis!")
                         }
@@ -228,11 +182,9 @@ use pyo3::prelude::*;
 
                         for goal_index in 0..output.0.len() {
                             for i in 0..output.0[goal_index].len() {
-                                let middle_facing_index = output.3[goal_index][i].len() / 2;
-
                                 let weights = output.0[goal_index][i].clone();
-                                let offset = if axis == 0 {(Some(output.1[goal_index][i].0[middle_facing_index].x), None)} else {(None, Some(output.1[goal_index][i].0[middle_facing_index].z))};
-                                let dist = if axis == 0 {(Some(output.2[goal_index][i][middle_facing_index].0), None, Some(output.2[goal_index][i][middle_facing_index].1), None)} else {(None, Some(output.2[goal_index][i][middle_facing_index].0), None, Some(output.2[goal_index][i][middle_facing_index].1))};
+                                let offset = if axis == 0 {(Some(output.1[goal_index][i]), None)} else {(None, Some(output.1[goal_index][i]))};
+                                let dist = if axis == 0 {(Some(output.2[goal_index][i].0), None, Some(output.2[goal_index][i].1), None)} else {(None, Some(output.2[goal_index][i].0), None, Some(output.2[goal_index][i].1))};
                                 let for_goal = Some(goal_index);
                                 let facings = Some(output.3[goal_index][i].clone());
 

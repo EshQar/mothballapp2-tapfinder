@@ -1,31 +1,29 @@
 
 
-pub fn mcsin(total_angles: i32, pi: f32, rad: f32) -> f32 {
+pub fn mcsin(total_angles: i32, pi: f64, rad: f32) -> f32 {
     if total_angles == -1 {
-        println!("float precision might have been compromised");
         return rad.sin();
     } else if total_angles == 65536 {
         let index = (rad * 10430.378_f32) as i32 & 65535;
-        return (index as f32 * pi * 2.0 / total_angles as f32).sin() as f32;
+        return (index as f64 * pi * 2.0 / total_angles as f64).sin() as f32;
     } else {
-        let index = ((1.0 / (2.0 * pi) * total_angles as f32 * rad) as i32)
+        let index = ((1.0 / (2.0 * pi) * total_angles as f64 * rad as f64) as i32)
             & (total_angles - 1);
-        return (index as f32 * pi * 2.0 / total_angles as f32).sin() as f32;
+        return (index as f64 * pi * 2.0 / total_angles as f64).sin() as f32;
     }
 }
 
-pub fn mccos(total_angles: i32, pi: f32, rad: f32) -> f32 {
+pub fn mccos(total_angles: i32, pi: f64, rad: f32) -> f32 {
     if total_angles == -1 {
-        println!("float precision might have been compromised");
         return rad.cos();
     } else if total_angles == 65536 {
         let index = ((rad * 10430.378_f32 + 16384.0_f32) as i32) & 65535;
-        return (index as f32 * pi * 2.0 / total_angles as f32).sin() as f32;
+        return (index as f64 * pi * 2.0 / total_angles as f64).sin() as f32;
     } else {
-        let index = ((1.0 / (2.0 * pi) * total_angles as f32 * rad
-            + total_angles as f32 / 4.0) as i32)
+        let index = ((1.0 / (2.0 * pi) * total_angles as f64 * rad as f64) as i32
+            + (total_angles as f32 / 4.0) as i32)
             & (total_angles - 1);
-        return (index as f32 * pi * 2.0 / total_angles as f32).sin() as f32;
+        return (index as f64 * pi * 2.0 / total_angles as f64).sin() as f32;
     }
 }
 

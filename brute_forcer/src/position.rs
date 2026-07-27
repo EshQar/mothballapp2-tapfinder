@@ -44,3 +44,14 @@ impl Mul<f32> for &Position2D {
         Position2D { x: self.x * rhs, z: self.z * rhs }
     }
 }
+
+pub trait TapOffset:
+    Copy +
+    Clone + 
+    Default + 
+    Add<Output = Self> + Mul<f32, Output = Self> 
+    {}
+
+impl TapOffset for f32 {}
+
+impl TapOffset for Position2D {}

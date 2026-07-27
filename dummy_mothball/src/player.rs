@@ -558,11 +558,11 @@ impl PlayerSimulationXZ {
 
 impl PlayerSimulationXZ {
     fn mccos(&self, facing: f32) -> f32 {
-        math::mccos(self.total_angles, Simulation::PI as f32, facing)
+        math::mccos(self.total_angles, Simulation::PI, facing)
     }
 
     fn mcsin(&self, facing: f32) -> f32 {
-        math::mcsin(self.total_angles, Simulation::PI as f32, facing)
+        math::mcsin(self.total_angles, Simulation::PI, facing)
     }
 
     fn truncate_number(&self, value:f64) -> String {
